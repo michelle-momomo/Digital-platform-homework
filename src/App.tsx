@@ -439,7 +439,7 @@ export default function App() {
                           </p>
                         )}
                         <button
-                          className={`button ${i === 0 ? "primary" : "secondary"}`}
+                          className="button secondary"
                           onClick={() => start(c, resumable)}
                         >
                           {resumable
