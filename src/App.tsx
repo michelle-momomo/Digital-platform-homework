@@ -170,12 +170,12 @@ export default function App() {
               e.preventDefault();
               back();
             }}
-            aria-label="After Class home"
+            aria-label="Du Over home"
           >
-            <span className="brand-mark">
-              a<span>c</span>
+            <span className="brand-mark" aria-hidden="true">
+              du
             </span>
-            After Class<span className="brand-dot">.</span>
+            Du Over<span className="brand-dot">.</span>
           </a>
           <span className="header-note">
             Made for the part after the lecture.
@@ -464,7 +464,7 @@ export default function App() {
         </main>
         <footer>
           <span>
-            After Class<span className="footer-dot">.</span>
+            Du Over<span className="footer-dot">.</span>
             <span className="footer-caption"> A little more remembered.</span>
           </span>
           <div>

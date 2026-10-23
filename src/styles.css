@@ -116,16 +116,13 @@ button svg {
   height: 38px;
   width: 38px;
   font-size: 24px;
-  letter-spacing: -5px;
+  letter-spacing: -2px;
   display: flex;
   align-items: center;
-  padding-left: 7px;
+  padding-left: 0;
+  justify-content: center;
   margin-right: 12px;
   font-weight: 650;
-}
-.brand-mark span {
-  position: relative;
-  top: 3px;
 }
 .brand-dot {
   color: #a25a74;

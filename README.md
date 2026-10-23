@@ -1,4 +1,4 @@
-# After Class
+# Du Over
 
 A responsive guest-session recap website. React + TypeScript + Vite; no account, database, paid service, or API key is required.
 
