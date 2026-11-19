@@ -51,8 +51,9 @@ test("complete all three challenges; scores, retries, refresh and reset", async 
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await expect(page.getByRole("tab")).toHaveCount(1);
-  await page.getByRole("button", { name: /A quick refresher/ }).click();
+  await expect(page.getByRole("tab")).toHaveCount(3);
+  await expect(page.getByText("More sessions coming soon")).toHaveCount(0);
+  await expect(page.getByText("LaunchLab · 9 Oct 2026")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "A commit stays local until you push" }),
   ).toBeVisible();
@@ -248,13 +249,15 @@ test("no horizontal overflow, source access, and accessibility checks", async ({
     fullPage: true,
   });
   await page.getByText("About the content & sources", { exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "A commit stays local until you push" }),
+  ).toBeVisible();
   const source = page.getByRole("link", { name: /LaunchLab: Claude Design/ });
   expect(
     (await page.request.get((await source.getAttribute("href"))!)).headers()[
       "content-type"
     ],
   ).toContain("application/pdf");
-  await page.getByRole("button", { name: /A quick refresher/ }).click();
   await check();
   await start(page, "Build the Pipeline");
   await check();
@@ -326,14 +329,16 @@ test("keyboard-only controls and native reset cancellation", async ({
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
-  await page.getByRole("tab").focus();
+  await page.getByRole("tab", { name: "Vibe Coding" }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab")).toBeFocused();
-  await page.getByRole("button", { name: /A quick refresher/ }).focus();
-  await page.keyboard.press("Enter");
+  await expect(page.getByRole("tab", { name: "Agentic AI" })).toBeFocused();
   await expect(
-    page.getByRole("button", { name: /A quick refresher/ }),
-  ).toHaveAttribute("aria-expanded", "true");
+    page.getByRole("heading", { name: "It is a people problem" }),
+  ).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "LinkedIn" })).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(page.getByRole("tab", { name: "Vibe Coding" })).toBeFocused();
   await page
     .locator(".challenge-card")
     .first()

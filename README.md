@@ -20,8 +20,8 @@ npm run preview
 
 ## What is included
 
-- One real session: **Vibe Coding**. No invented sessions, speaker attribution, or session date.
-- Five collapsible takeaways and three challenges: reorder a pipeline (drag or buttons), two rounds of task matching, and five launch decisions.
+- Three sessions: **Vibe Coding** (LaunchLab, 9 Oct 2026; no individual speaker is named in the lecture), **Agentic AI** (Nick Goh, 30 Oct 2026), and **LinkedIn** (Cindy Leong, 13 Nov 2026).
+- Takeaways sit on the session page. Vibe Coding still has three challenges: reorder a pipeline (drag or buttons), two rounds of task matching, and five launch decisions. Agentic AI has one handoff game. LinkedIn has one hold-or-fold card game.
 - First-attempt scoring: pipeline 1 point, matching 7 points, decisions 5 points. Corrections do not add points. Completion and scores are separate. Retrying replaces the latest result while preserving the personal best.
 - Per-challenge explanations, review suggestions, source pages, and a clearly marked localStorage extra tip.
 - Browser-local scores and unfinished attempts, refresh restoration, defensive data validation, content-version invalidation, and graceful in-memory fallback when storage is blocked.
@@ -31,14 +31,16 @@ npm run preview
 
 `src/data.ts` defines session metadata, takeaways, challenge types, tasks, correct answers, explanations, and PDF page references. The supplied lecture PDF is included at `public/lecture-source.pdf` for checking references. Page numbers are physical PDF pages, counting from 1.
 
-The design → build → commit/push → Vercel pipeline combines the workflow on pages 4, 7, 20 and 21; it is explicitly described as one workflow. The file round concerns a simple static HTML/CSS/JavaScript site, not the file structure of this React implementation. The localStorage decision is supplemental learning content. The slide's example prompt about a 15-lesson course is not used as an assignment requirement. Speaker and date remain `null` because they are not unambiguously established by the material.
+The design → build → commit/push → Vercel pipeline combines the workflow on pages 4, 7, 20 and 21; it is explicitly described as one workflow. The file round concerns a simple static HTML/CSS/JavaScript site, not the file structure of this React implementation. The localStorage decision is supplemental learning content. The slide's example prompt about a 15-lesson course is not used as an assignment requirement. LaunchLab is the name in the source title. The Vibe Coding date is the course date 9 Oct 2026. The lecture PDF does not name an individual speaker, so none is shown.
+
+Agentic AI uses Session 4 (media-team and guest-session pages) and Nick Goh’s 55-page deck. Deck page numbers follow the original deck: part 2’s first page is deck page 29. LinkedIn uses Session 5 pages 2 and 28 for the guest slide, plus class notes from Cindy Leong’s 13 Nov 2026 talk for the GEO section the PDF did not include. Only points attributed to her are used. Counts the notes mark as uncertain are omitted. Her name and title follow the guest slide.
 
 The app has not been published or pushed by this implementation task.
 
 ## Add a session
 
 1. Add a `Session` object to the exported `sessions` array in `src/data.ts` (or import one from another data file). Use a unique session ID and unique challenge IDs. Pair IDs must be unique across the rounds of a matching challenge.
-2. Provide verified content and source references. Leave unknown speaker/date as `null`. Supported challenge discriminators are `pipeline`, `matching`, and `decisions`.
+2. Provide verified content and source references. Leave unknown speaker, role, or date as `null`. Supported challenge discriminators are `pipeline`, `matching`, `decisions`, `staffing`, and `holdem`.
 3. Use nonempty challenge lists, at least two pipeline steps, and nonempty matching rounds/scenario options. Answers must refer to existing option IDs.
 4. Increment the session's `contentVersion` when questions, answers, scoring, or challenge membership change. Old progress for that session is discarded; other sessions keep theirs.
 5. Run the build and tests. Navigation, challenge cards, and completion totals are generated from the actual data, so future placeholders do not count toward progress.

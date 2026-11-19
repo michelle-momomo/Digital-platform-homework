@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { maxScore, sessions } from "./data";
-import type { Decisions, Matching, Pipeline } from "./data";
+import type { Decisions, Holdem, Matching, Pipeline, Staffing } from "./data";
 import {
   createAttempt,
   emptyProgress,
@@ -225,6 +225,107 @@ describe("results and persistence", () => {
     expect(session.challenges.map(maxScore)).toEqual([1, 7, 5]);
     expect(decisions.scenarios.at(-1)?.source.extra).toBe(true);
     expect(session.speaker).toBeNull();
-    expect(session.date).toBeNull();
+    expect(session.date).toBe("9 Oct 2026");
+    expect(session.programme).toBe("LaunchLab");
+    expect(sessions.map((item) => item.id)).toEqual([
+      "vibe-coding",
+      "agentic-ai",
+      "linkedin",
+    ]);
+  });
+});
+
+const agentic = sessions[1];
+const linkedin = sessions[2];
+const handoff = agentic.challenges[0] as Staffing;
+const showdown = linkedin.challenges[0] as Holdem;
+
+function staff(a: Attempt, misses = false) {
+  for (const seat of handoff.seats) {
+    if (misses && seat.id === handoff.seats[0].id)
+      a = transition(handoff, a, { type: "play", id: "buyer" });
+    a = transition(handoff, a, { type: "play", id: seat.id });
+  }
+  return transition(handoff, a, { type: "seal" });
+}
+function deal(a: Attempt, miss = false) {
+  for (const hand of showdown.hands) {
+    for (const card of hand.cards) {
+      const choice = card.hold ? "hold" : "fold";
+      const missThis =
+        miss && hand.id === showdown.hands[0].id && card.id === hand.cards[0].id;
+      a = transition(showdown, a, {
+        type: "setCard",
+        id: card.id,
+        choice: missThis ? (card.hold ? "fold" : "hold") : choice,
+      });
+    }
+    a = transition(showdown, a, { type: "showHand" });
+    if (miss && hand.id === showdown.hands[0].id) {
+      const card = hand.cards[0];
+      a = transition(showdown, a, {
+        type: "setCard",
+        id: card.id,
+        choice: card.hold ? "hold" : "fold",
+      });
+      a = transition(showdown, a, { type: "showHand" });
+    }
+    a = transition(showdown, a, { type: "nextHand" });
+  }
+  return a;
+}
+
+describe("staffing", () => {
+  it("scores only the first card played on each seat", () => {
+    const perfect = staff(createAttempt(handoff));
+    expect(perfect.done).toBe(true);
+    expect(outcome(handoff, perfect)).toEqual({ score: 6, review: [] });
+    const missed = staff(createAttempt(handoff), true);
+    expect(missed.done).toBe(true);
+    expect(outcome(handoff, missed).score).toBe(5);
+    expect(outcome(handoff, missed).review[0]).toContain("Brief Writer");
+  });
+  it("rejects a card for a seat that is already filled and ignores an early finish", () => {
+    let a = createAttempt(handoff);
+    expect(transition(handoff, a, { type: "seal" })).toEqual(a);
+    a = transition(handoff, a, { type: "play", id: "writer" });
+    expect(transition(handoff, a, { type: "play", id: "writer" })).toEqual(a);
+    expect(a.matched).toEqual(["writer"]);
+  });
+});
+
+describe("holdem", () => {
+  it("will not show a partial hand or leave a hand that still disagrees", () => {
+    let a = createAttempt(showdown);
+    expect(transition(showdown, a, { type: "showHand" })).toEqual(a);
+    expect(transition(showdown, a, { type: "nextHand" })).toEqual(a);
+    const card = showdown.hands[0].cards[0];
+    a = transition(showdown, a, {
+      type: "setCard",
+      id: card.id,
+      choice: "hold",
+    });
+    expect(transition(showdown, a, { type: "showHand" })).toEqual(a);
+  });
+  it("keeps the first call when a miss is corrected", () => {
+    const perfect = deal(createAttempt(showdown));
+    expect(perfect.done).toBe(true);
+    expect(outcome(showdown, perfect)).toEqual({ score: 30, review: [] });
+    const missed = deal(createAttempt(showdown), true);
+    expect(missed.done).toBe(true);
+    expect(outcome(showdown, missed).score).toBe(29);
+  });
+  it("round-trips an in-progress hand and a finished chain", () => {
+    let a = createAttempt(handoff);
+    a = transition(handoff, a, { type: "play", id: "buyer" });
+    const saved = saveAttempt(emptyProgress(), agentic, handoff, a);
+    expect(parseProgress(JSON.stringify(saved)).progress).toEqual(saved);
+    const done = saveAttempt(
+      emptyProgress(),
+      linkedin,
+      showdown,
+      deal(createAttempt(showdown)),
+    );
+    expect(parseProgress(JSON.stringify(done)).progress).toEqual(done);
   });
 });

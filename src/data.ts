@@ -1,4 +1,6 @@
-export type Source = { pages: number[]; extra?: boolean };
+import { agenticSession } from "./agentic";
+import { linkedinSession } from "./linkedin";
+export type Source = { pages: number[]; extra?: boolean; doc?: string };
 export type Step = {
   id: string;
   text: string;
@@ -33,30 +35,82 @@ export type Matching = Base & {
   rounds: { title: string; note: string; pairs: Pair[] }[];
 };
 export type Decisions = Base & { type: "decisions"; scenarios: Scenario[] };
-export type Challenge = Pipeline | Matching | Decisions;
+export type StaffCard = {
+  id: string;
+  name: string;
+  blurb: string;
+  explanation: string;
+  source: Source;
+};
+export type Seat = {
+  id: string;
+  job: string;
+  source: Source;
+};
+export type Staffing = Base & {
+  type: "staffing";
+  note: string;
+  seats: Seat[];
+  cards: StaffCard[];
+  decoys: StaffCard[];
+};
+export type HoleCard = {
+  id: string;
+  rank: string;
+  text: string;
+  hold: boolean;
+  why: string;
+  source: Source;
+};
+export type Holdem = Base & {
+  type: "holdem";
+  note: string;
+  hands: { id: string; board: string; cards: HoleCard[] }[];
+};
+export type Challenge = Pipeline | Matching | Decisions | Staffing | Holdem;
 export type Session = {
   id: string;
   title: string;
+  programme: string | null;
   speaker: string | null;
+  role: string | null;
   date: string | null;
+  topic: string | null;
   contentVersion: number;
   description: string;
-  source: { title: string; url: string };
-  takeaways: { title: string; text: string; source: Source }[];
+  sources: { title: string; url: string }[];
+  notes: string[];
+  takeaways: { title: string; text: string; source: Source; also?: Source }[];
+  spotlight?: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    points: { title: string; text: string; source: Source }[];
+  };
   challenges: Challenge[];
 };
 export const sessions: Session[] = [
   {
     id: "vibe-coding",
     title: "Vibe Coding",
+    programme: "LaunchLab",
     speaker: null,
-    date: null,
+    role: null,
+    date: "9 Oct 2026",
+    topic: null,
     contentVersion: 1,
     description: "Take an idea from your first prompt to a live website.",
-    source: {
-      title: "LaunchLab: Claude Design, Claude Code, GitHub, and Vercel",
-      url: "/lecture-source.pdf",
-    },
+    sources: [
+      {
+        title: "LaunchLab: Claude Design, Claude Code, GitHub, and Vercel",
+        url: "/lecture-source.pdf",
+      },
+    ],
+    notes: [
+      "References use PDF page numbers (1–31), not slide labels.",
+      "The pipeline combines pages 4, 7, 20 and 21. Tool roles: pages 8, 14, 19 and 28. File roles: page 24. Launch decisions: pages 15, 18, 19, 21 and 26–28. The localStorage question is an extra learning tip, not a claim from the speaker.",
+      "LaunchLab is the name of this workflow in the source title. The session date, 9 Oct 2026, is the course date for this recap. The lecture PDF does not name an individual speaker, so none is shown.",
+    ],
     takeaways: [
       {
         title: "Start with the interface",
@@ -338,10 +392,16 @@ export const sessions: Session[] = [
       },
     ],
   },
+  agenticSession,
+  linkedinSession,
 ];
 export const maxScore = (c: Challenge) =>
   c.type === "pipeline"
     ? 1
     : c.type === "matching"
       ? c.rounds.reduce((n, r) => n + r.pairs.length, 0)
-      : c.scenarios.length;
+      : c.type === "staffing"
+        ? c.seats.length
+        : c.type === "holdem"
+          ? c.hands.reduce((n, h) => n + h.cards.length, 0)
+          : c.scenarios.length;
