@@ -25,6 +25,8 @@ export function Sprite({
           ) : [],
         ),
       )}
+      <rect className="lid" x="11" y="14" width="2" height="2" fill={character.skin} />
+      <rect className="lid" x="19" y="14" width="2" height="2" fill={character.skin} />
     </svg>
   );
 }

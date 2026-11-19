@@ -9,7 +9,7 @@ async function create(page: Page, name: string) {
   await page.getByRole("button", { name: "Girl", exact: true }).click();
   await page.getByRole("button", { name: "Pigtails", exact: true }).click();
   await page.getByLabel("Name").fill(name);
-  await page.getByRole("button", { name: "Enter the map" }).click();
+  await page.getByRole("button", { name: "Start adventure" }).click();
 }
 
 async function sortPipeline(page: Page) {

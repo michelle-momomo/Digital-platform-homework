@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { Sprite } from "./AvatarView";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region, Step } from "./content";
 import { gradedCount } from "./content";
 import { rate } from "./logic";
 import { sfx } from "./sfx";
+import { useGame } from "./store";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -41,7 +43,9 @@ export function PlayView({
   const [source, setSource] = useState("");
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
+  const [mood, setMood] = useState<"idle" | "happy" | "sad">("idle");
   const [left, setLeft] = useState(Math.round(level.limitMs / 1000));
+  const game = useGame();
   const seen = useRef(new Set<string>());
   const correct = useRef(0);
   const combo = useRef(0);
@@ -65,9 +69,11 @@ export function PlayView({
       combo.current += 1;
       bestCombo.current = Math.max(bestCombo.current, combo.current);
       sfx("ok", muted);
+      setMood("happy");
     } else {
       combo.current = 0;
       sfx("bad", muted);
+      setMood("sad");
     }
     setTick((value) => value + 1);
   }
@@ -109,14 +115,27 @@ export function PlayView({
         <p>{level.title}</p>
       </div>
       <div className="hud">
-        <span>Combo {combo.current}</span>
-        <span>{left > 0 ? `Bonus ${left}s` : "Bonus over"}</span>
+        <b className="combo" key={combo.current}>
+          Combo {combo.current}
+        </b>
+        <span className="timebar" aria-label={left > 0 ? `Bonus ${left}s` : "Bonus over"}>
+          <i style={{ width: `${(left / Math.max(1, Math.round(level.limitMs / 1000))) * 100}%` }} />
+        </span>
         {region.id === "linkedin" && (
-          <span className="meter" aria-label="AI citation meter">
+          <span className="gauge" aria-label="AI citation meter">
             <i style={{ width: `${meter}%` }} />
+            <em>Citations</em>
           </span>
         )}
       </div>
+      <div className="scene">
+        {game.save.character && (
+          <div className={`actor ${mood}`}>
+            <Sprite character={game.save.character} className={mood === "happy" ? "hop" : "bounce"} />
+            {mood === "sad" && <span className="sweat">!</span>}
+          </div>
+        )}
+        <div className="board">
       <p className="prompt">{step.prompt}</p>
       {step.kind === "order" && (
         <OrderPlay
@@ -177,8 +196,21 @@ export function PlayView({
           {stepIndex === level.steps.length - 1 ? "Finish" : "Next"}
         </button>
       )}
+        </div>
+      </div>
+      {mood === "happy" && <ConfettiLite />}
       <span className="sr-only">{tick}</span>
     </main>
+  );
+}
+
+function ConfettiLite() {
+  return (
+    <div className="confetti" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, i) => (
+        <span key={i} style={{ left: `${8 + i * 9}%` }} />
+      ))}
+    </div>
   );
 }
 

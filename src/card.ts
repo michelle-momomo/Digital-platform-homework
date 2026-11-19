@@ -32,9 +32,9 @@ export function drawResultCard(
   ctx.arc(790, 150, 8, 0, Math.PI * 2);
   ctx.fill();
   const grid = spriteGrid(opts.character);
-  const size = 14;
-  const ox = 90;
-  const oy = 150;
+  const size = 6;
+  const ox = 70;
+  const oy = 130;
   grid.forEach((row, y) =>
     row.forEach((color, x) => {
       if (!color) return;

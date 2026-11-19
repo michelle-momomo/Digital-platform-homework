@@ -59,8 +59,8 @@ export const OUTFITS = [
   { id: "pistachio", hex: "#D5E8C4", label: "Pistachio" },
 ];
 
-export const COLS = 16;
-export const ROWS = 22;
+export const COLS = 32;
+export const ROWS = 40;
 
 const hexes = new Set([
   ...HAIR_COLORS.map((c) => c.hex),
@@ -131,80 +131,140 @@ function rect(
     for (let xx = 0; xx < w; xx++) dot(g, x + xx, y + yy, c);
 }
 
-function hair(g: (string | null)[][], style: HairId, c: string) {
-  const cap = () => {
-    rect(g, 4, 2, 8, 2, c);
-    rect(g, 5, 4, 6, 1, c);
-  };
+function shade(hex: string, amt: number) {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const ch = (v: number) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0");
+  return `#${ch(((n >> 16) & 255) + amt)}${ch(((n >> 8) & 255) + amt)}${ch((n & 255) + amt)}`;
+}
+function blob(
+  g: (string | null)[][],
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  c: string,
+) {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+    for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+      const dx = (x + 0.5 - cx) / rx;
+      const dy = (y + 0.5 - cy) / ry;
+      if (dx * dx + dy * dy <= 1) dot(g, x, y, c);
+    }
+  }
+}
+function paintHair(g: (string | null)[][], style: HairId, c: string, hi: string, skin: string) {
+  const cap = () => blob(g, 16, 11, 8.2, 6.2, c);
   if (style === "bob") {
     cap();
-    rect(g, 4, 5, 1, 4, c);
-    rect(g, 11, 5, 1, 4, c);
+    blob(g, 9, 16, 2.4, 5, c);
+    blob(g, 23, 16, 2.4, 5, c);
+    rect(g, 10, 9, 12, 2, c);
   } else if (style === "pigtails") {
     cap();
-    rect(g, 1, 5, 3, 3, c);
-    rect(g, 12, 5, 3, 3, c);
-    dot(g, 2, 8, "#F8C8DC");
-    dot(g, 13, 8, "#F8C8DC");
+    blob(g, 6, 18, 3.2, 4.2, c);
+    blob(g, 26, 18, 3.2, 4.2, c);
+    dot(g, 6, 18, "#fff");
+    dot(g, 26, 18, "#fff");
   } else if (style === "bun") {
-    rect(g, 6, 0, 4, 2, c);
+    blob(g, 16, 5, 3.4, 3.2, c);
     cap();
+    dot(g, 15, 4, hi);
   } else if (style === "long") {
     cap();
-    rect(g, 3, 5, 2, 11, c);
-    rect(g, 11, 5, 2, 11, c);
+    rect(g, 7, 14, 3, 16, c);
+    rect(g, 22, 14, 3, 16, c);
+    blob(g, 8, 30, 2.2, 2, c);
+    blob(g, 23, 30, 2.2, 2, c);
   } else if (style === "puffs") {
-    rect(g, 1, 2, 4, 4, c);
-    rect(g, 11, 2, 4, 4, c);
-    rect(g, 5, 3, 6, 2, c);
+    blob(g, 7, 10, 4, 4, c);
+    blob(g, 25, 10, 4, 4, c);
+    cap();
+    dot(g, 6, 9, hi);
+    dot(g, 24, 9, hi);
   } else if (style === "spiky") {
-    rect(g, 5, 1, 1, 2, c);
-    rect(g, 7, 0, 2, 2, c);
-    rect(g, 10, 1, 1, 2, c);
+    rect(g, 8, 4, 2, 5, c);
+    rect(g, 12, 2, 2, 6, c);
+    rect(g, 16, 3, 2, 5, c);
+    rect(g, 20, 4, 2, 5, c);
     cap();
   } else if (style === "side") {
-    cap();
-    rect(g, 3, 3, 2, 4, c);
-    rect(g, 11, 4, 1, 2, c);
+    blob(g, 11, 9, 6, 5, c);
+    blob(g, 20, 11, 4, 3.5, c);
+    rect(g, 8, 12, 4, 4, c);
   } else if (style === "curly") {
-    rect(g, 4, 1, 2, 2, c);
-    rect(g, 7, 0, 2, 2, c);
-    rect(g, 10, 1, 2, 2, c);
+    blob(g, 9, 7, 2.4, 2.4, c);
+    blob(g, 13, 5, 2.6, 2.6, c);
+    blob(g, 18, 5, 2.6, 2.6, c);
+    blob(g, 22, 8, 2.3, 2.3, c);
     cap();
   } else {
-    rect(g, 5, 3, 6, 1, c);
+    blob(g, 16, 10, 7.2, 2.2, c);
+    blob(g, 8, 14, 1.5, 1.6, skin);
+    blob(g, 24, 14, 1.5, 1.6, skin);
   }
+  rect(g, 12, 8, 3, 2, hi);
+}
+function outline(g: (string | null)[][]) {
+  const next = empty();
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (g[y][x]) {
+        next[y][x] = g[y][x];
+        continue;
+      }
+      const near = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ].some(([xx, yy]) => yy >= 0 && xx >= 0 && yy < ROWS && xx < COLS && g[yy][xx]);
+      if (near) next[y][x] = "#4A3B55";
+    }
+  }
+  return next;
 }
 
 export function spriteGrid(a: Pick<Character, "gender" | "hair" | "hairColor" | "skin" | "outfit">) {
   const g = empty();
   const skin = a.skin;
   const outfit = a.outfit;
-  const ink = "#3D3550";
-  rect(g, 5, 20, 6, 1, "#E7D8CC");
+  const dark = shade(outfit, -28);
+  const ink = "#3A3148";
   if (a.gender === "girl") {
-    rect(g, 5, 11, 6, 3, outfit);
-    rect(g, 4, 14, 8, 3, outfit);
-    rect(g, 6, 17, 1, 2, skin);
-    rect(g, 9, 17, 1, 2, skin);
-    rect(g, 6, 19, 1, 1, ink);
-    rect(g, 9, 19, 1, 1, ink);
+    blob(g, 16, 26, 6.2, 4.2, outfit);
+    rect(g, 11, 24, 10, 3, outfit);
+    rect(g, 14, 27, 2, 1, dark);
+    rect(g, 17, 27, 2, 1, dark);
+    rect(g, 12, 31, 3, 2, ink);
+    rect(g, 18, 31, 3, 2, ink);
+    rect(g, 13, 30, 2, 2, skin);
+    rect(g, 18, 30, 2, 2, skin);
   } else {
-    rect(g, 6, 11, 4, 4, outfit);
-    rect(g, 6, 15, 1, 4, "#7E8CA8");
-    rect(g, 9, 15, 1, 4, "#7E8CA8");
-    rect(g, 6, 19, 1, 1, ink);
-    rect(g, 9, 19, 1, 1, ink);
+    rect(g, 12, 23, 8, 5, outfit);
+    rect(g, 15, 25, 2, 3, dark);
+    rect(g, 12, 28, 3, 3, dark);
+    rect(g, 17, 28, 3, 3, dark);
+    rect(g, 12, 31, 3, 2, ink);
+    rect(g, 17, 31, 3, 2, ink);
   }
-  rect(g, 4, 12, 1, 3, skin);
-  rect(g, 11, 12, 1, 3, skin);
-  rect(g, 7, 9, 2, 2, skin);
-  rect(g, 4, 3, 8, 7, skin);
-  dot(g, 6, 6, ink);
-  dot(g, 9, 6, ink);
-  dot(g, 5, 7, "#F4A7C2");
-  dot(g, 10, 7, "#F4A7C2");
-  rect(g, 7, 8, 2, 1, "#C47A8A");
-  hair(g, a.hair, a.hairColor);
-  return g;
+  rect(g, 9, 24, 3, 4, skin);
+  rect(g, 20, 24, 3, 4, skin);
+  rect(g, 15, 21, 2, 3, skin);
+  blob(g, 16, 13, 8.4, 8.2, skin);
+  rect(g, 11, 14, 2, 2, ink);
+  rect(g, 19, 14, 2, 2, ink);
+  dot(g, 11, 14, "#fff");
+  dot(g, 19, 14, "#fff");
+  rect(g, 9, 17, 2, 1, "#F3A8C4");
+  rect(g, 21, 17, 2, 1, "#F3A8C4");
+  rect(g, 15, 18, 2, 1, "#C98496");
+  paintHair(g, a.hair, a.hairColor, shade(a.hairColor, 48), skin);
+  rect(g, 11, 14, 2, 2, ink);
+  rect(g, 19, 14, 2, 2, ink);
+  dot(g, 11, 14, "#fff");
+  dot(g, 19, 14, "#fff");
+  rect(g, 9, 17, 2, 1, "#F3A8C4");
+  rect(g, 21, 17, 2, 1, "#F3A8C4");
+  rect(g, 15, 18, 2, 1, "#C98496");
+  return outline(g);
 }
