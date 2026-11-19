@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { maxScore, sessions } from "./data";
-import type { Challenge, Session, Source } from "./data";
+import type { Challenge, Session } from "./data";
 import {
   createAttempt,
   emptyProgress,
@@ -11,68 +11,9 @@ import {
   transition,
 } from "./model";
 import type { Action, Attempt, Progress, Result } from "./model";
+import { HoldemTable, StaffingBoard } from "./play";
+import { Citation, Icon } from "./ui";
 import "./styles.css";
-
-function Icon({
-  name,
-  size = 20,
-}: {
-  name: "arrow" | "layers" | "connect" | "launch" | "check" | "book" | "close";
-  size?: number;
-}) {
-  const paths = {
-    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
-    layers: (
-      <>
-        <path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5" />
-      </>
-    ),
-    connect: (
-      <>
-        <rect x="3" y="4" width="6" height="6" rx="2" />
-        <rect x="15" y="14" width="6" height="6" rx="2" />
-        <path d="M9 7h6a3 3 0 0 1 3 3v4M6 10v7h9" />
-      </>
-    ),
-    launch: (
-      <>
-        <path d="m14 4 6-1-1 6-8 8-4-4 7-9ZM7 13l-3 1-1 5 5-1M11 17l-1 4 4-1 2-5" />
-        <path d="m15 7 2 2" />
-      </>
-    ),
-    check: <path d="m5 12 4 4L19 6" />,
-    book: (
-      <>
-        <path d="M12 6v15M3 4c4-1 6 0 9 2 3-2 5-3 9-2v14c-4-1-6 0-9 2-3-2-5-3-9-2V4Z" />
-      </>
-    ),
-    close: <path d="m6 6 12 12M18 6 6 18" />,
-  };
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {paths[name]}
-    </svg>
-  );
-}
-function Citation({ source }: { source: Source }) {
-  return (
-    <span className="citation">
-      {source.extra
-        ? "Extra tip · not from the lecture"
-        : `Lecture ${source.pages.length === 1 ? "p." : "pp."} ${source.pages.join(", ")}`}
-    </span>
-  );
-}
 function load() {
   try {
     const value = parseProgress(localStorage.getItem(STORAGE_KEY));
@@ -94,7 +35,6 @@ export default function App() {
   const [view, setView] = useState<"session" | "challenge">(
     initial.progress.sessions[sessions[0].id]?.active ? "challenge" : "session",
   );
-  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const modalRef = useRef<HTMLDialogElement>(null);
@@ -129,7 +69,6 @@ export default function App() {
   }
   function start(c: Challenge, resume = false) {
     if (!resume) setProgress((p) => saveAttempt(p, s, c, createAttempt(c)));
-    setKnowledgeOpen(false);
     setView("challenge");
     focusContent();
   }
@@ -144,13 +83,11 @@ export default function App() {
   }
   function back() {
     setView("session");
-    setKnowledgeOpen(false);
     focusContent();
   }
   function reset() {
     setProgress(emptyProgress());
     setView("session");
-    setKnowledgeOpen(false);
     setNotice("Progress reset. A fresh start, whenever you are ready.");
     setResetOpen(false);
     requestAnimationFrame(() => resetRef.current?.focus());
@@ -219,7 +156,6 @@ export default function App() {
                             sessions.length;
                     setSessionId(sessions[next].id);
                     setView("session");
-                    setKnowledgeOpen(false);
                     document
                       .getElementById(`tab-${sessions[next].id}`)
                       ?.focus();
@@ -228,7 +164,6 @@ export default function App() {
                 onClick={() => {
                   setSessionId(session.id);
                   setView("session");
-                  setKnowledgeOpen(false);
                 }}
               >
                 <Icon name="layers" size={17} />
@@ -236,7 +171,6 @@ export default function App() {
               </button>
             ))}
           </div>
-          <span className="coming">More sessions coming soon</span>
         </nav>
         <main id="main" tabIndex={-1}>
           <section
@@ -311,11 +245,7 @@ export default function App() {
                       {s.title}
                     </h2>
                     <p className="session-description">{s.description}</p>
-                    {(s.speaker || s.date) && (
-                      <p className="muted">
-                        {[s.speaker, s.date].filter(Boolean).join(" · ")}
-                      </p>
-                    )}
+                    <SessionMeta session={s} />
                   </div>
                   <div className="session-summary">
                     <span className="summary-fraction">
@@ -349,12 +279,7 @@ export default function App() {
                   </div>
                 )}
                 <div className="knowledge">
-                  <button
-                    className="knowledge-toggle"
-                    aria-expanded={knowledgeOpen}
-                    aria-controls="knowledge-content"
-                    onClick={() => setKnowledgeOpen(!knowledgeOpen)}
-                  >
+                  <div className="knowledge-toggle">
                     <span className="knowledge-label">
                       <Icon name="book" />
                       <span>
@@ -364,31 +289,32 @@ export default function App() {
                         </span>
                       </span>
                     </span>
-                    <span className="toggle-label">
-                      {knowledgeOpen ? "Close notes −" : "Open notes +"}
-                    </span>
-                  </button>
-                  {knowledgeOpen && (
-                    <div id="knowledge-content" className="knowledge-content">
-                      {s.takeaways.map((t, i) => (
-                        <article key={t.title}>
-                          <span className="note-number">0{i + 1}</span>
-                          <div>
-                            <h3>{t.title}</h3>
-                            <p>{t.text}</p>
-                            <Citation source={t.source} />
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  )}
+                  </div>
+                  <div id="knowledge-content" className="knowledge-content">
+                    {s.takeaways.map((t, i) => (
+                      <article key={t.title}>
+                        <span className="note-number">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <h3>{t.title}</h3>
+                          <p>{t.text}</p>
+                          <Citation source={t.source} />
+                        </div>
+                      </article>
+                    ))}
+                  </div>
                 </div>
                 <div className="section-label">
                   <div>
                     <h3>Your next few minutes</h3>
                     <p>Pick a challenge. Learn by doing.</p>
                   </div>
-                  <span>{s.challenges.length} WAYS TO MAKE IT STICK</span>
+                  <span>
+                    {s.challenges.length}{" "}
+                    {s.challenges.length === 1 ? "WAY" : "WAYS"} TO MAKE IT
+                    STICK
+                  </span>
                 </div>
                 <div className="challenge-grid">
                   {s.challenges.map((c, i) => {
@@ -399,16 +325,7 @@ export default function App() {
                       <article className="challenge-card" key={c.id}>
                         <div className="card-top">
                           <span className={`challenge-icon icon-${c.type}`}>
-                            <Icon
-                              name={
-                                c.type === "pipeline"
-                                  ? "layers"
-                                  : c.type === "matching"
-                                    ? "connect"
-                                    : "launch"
-                              }
-                              size={24}
-                            />
+                            <Icon name={challengeIcon(c.type)} size={24} />
                           </span>
                           <span className={`status ${result ? "is-done" : ""}`}>
                             {result ? (
@@ -502,28 +419,51 @@ export default function App() {
     </>
   );
 }
+function SessionMeta({ session }: { session: Session }) {
+  const who = [session.programme, session.speaker, session.date]
+    .filter(Boolean)
+    .join(" · ");
+  if (!who && !session.role && !session.topic) return null;
+  return (
+    <div className="session-meta-block">
+      {who && <p className="session-meta">{who}</p>}
+      {session.role && <p className="session-role">{session.role}</p>}
+      {session.topic && (
+        <p className="session-topic">
+          <span>Topic</span>
+          {session.topic}
+        </p>
+      )}
+    </div>
+  );
+}
+function challengeIcon(type: Challenge["type"]) {
+  if (type === "pipeline") return "layers" as const;
+  if (type === "matching") return "connect" as const;
+  if (type === "staffing") return "staff" as const;
+  if (type === "holdem") return "cards" as const;
+  return "launch" as const;
+}
 function SourceNotes({ session }: { session: Session }) {
   return (
     <details className="source-notes">
       <summary>About the content & sources</summary>
       <p>
         Based on{" "}
-        <a href={session.source.url} target="_blank" rel="noreferrer">
-          {session.source.title} ↗
-        </a>
-        . References use PDF page numbers (1–31), not slide labels.
+        {session.sources.map((source, index) => (
+          <span key={source.url}>
+            {index > 0 && (index === session.sources.length - 1 ? " and " : ", ")}
+            <a href={source.url} target="_blank" rel="noreferrer">
+              {source.title} ↗
+            </a>
+          </span>
+        ))}
+        .
       </p>
-      <p>
-        The pipeline combines pages 4, 7, 20 and 21. Tool roles: pages 8, 14, 19
-        and 28. File roles: page 24. Launch decisions: pages 15, 18, 19, 21 and
-        26–28. The localStorage question is an extra learning tip, not a claim
-        from the speaker.
-      </p>
-      <p>
-        Speaker and session date are left blank because the supplied material
-        does not clearly establish them. Content version:{" "}
-        {session.contentVersion}.
-      </p>
+      {session.notes.map((note) => (
+        <p key={note}>{note}</p>
+      ))}
+      <p>Content version: {session.contentVersion}.</p>
     </details>
   );
 }
@@ -557,6 +497,10 @@ function Game({
     dispatch({ type: "answer", id });
     requestAnimationFrame(() => feedbackRef.current?.focus());
   }
+  if (c.type === "staffing")
+    return <StaffingBoard c={c} a={a} dispatch={dispatch} />;
+  if (c.type === "holdem")
+    return <HoldemTable c={c} a={a} dispatch={dispatch} />;
   if (c.type === "pipeline")
     return (
       <>
@@ -920,7 +864,11 @@ function Results({
             ? "1 point for a completely correct first submission."
             : c.type === "matching"
               ? "1 point for each pair matched correctly on its first try."
-              : "1 point for each situation’s correct first choice."}
+              : c.type === "staffing"
+                ? "1 point for each seat staffed correctly on the first card you play."
+                : c.type === "holdem"
+                  ? "1 point for each card held or folded correctly the first time you show it."
+                  : "1 point for each situation’s correct first choice."}
           <br />A retry replaces the latest score; your best is kept.
         </div>
       </div>
@@ -940,7 +888,11 @@ function Results({
               ? "Design, build, upload the code, then connect hosting: a workflow you can explain."
               : c.type === "matching"
                 ? "Choose the tool or file for its job: storage, hosting, building, backend, structure, style, or behaviour."
-                : "Choose the next step by finding what is actually missing: upload, review, hosting, or saved data."}
+                : c.type === "staffing"
+                  ? "Brief, a fresh pair of eyes, the Big Idea, your approval, production, then a brand-voice review."
+                  : c.type === "holdem"
+                    ? "Hold only what the guest slide or the agenda actually says. Fold anything that adds or contradicts it."
+                    : "Choose the next step by finding what is actually missing: upload, review, hosting, or saved data."}
           </p>
         )}
       </section>
@@ -968,6 +920,36 @@ function Results({
                   </strong>
                   <p>{p.explanation}</p>
                   <Citation source={p.source} />
+                </div>
+              ))}
+            </div>
+          ))
+        ) : c.type === "staffing" ? (
+          <ol className="explanation-list">
+            {c.seats.map((seat) => {
+              const card = c.cards.find((item) => item.id === seat.id)!;
+              return (
+                <li key={seat.id}>
+                  <strong>
+                    {seat.job} → {card.name}
+                  </strong>
+                  <p>{card.explanation}</p>
+                  <Citation source={card.source} />
+                </li>
+              );
+            })}
+          </ol>
+        ) : c.type === "holdem" ? (
+          c.hands.map((hand) => (
+            <div key={hand.id}>
+              <h4>{hand.board}</h4>
+              {hand.cards.map((card) => (
+                <div className="answer-review" key={card.id}>
+                  <strong>
+                    {card.hold ? "Hold" : "Fold"} · {card.text}
+                  </strong>
+                  <p>{card.why}</p>
+                  <Citation source={card.source} />
                 </div>
               ))}
             </div>

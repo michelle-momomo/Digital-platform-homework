@@ -14,6 +14,7 @@ export type Attempt = {
   optionOrders: string[][];
   answers: string[];
   question: number;
+  plays: Record<string, "hold" | "fold">;
   done: boolean;
 };
 export type Result = {
@@ -58,11 +59,27 @@ export function createAttempt(c: Challenge): Attempt {
         ? c.rounds.map((r) => shuffle(r.pairs.map((p) => p.id)))
         : c.type === "decisions"
           ? c.scenarios.map((q) => shuffle(q.options.map((o) => o.id)))
-          : [],
+          : c.type === "staffing"
+            ? [
+                shuffledIds([
+                  ...c.cards.map((card) => card.id),
+                  ...c.decoys.map((card) => card.id),
+                ]),
+              ]
+            : c.type === "holdem"
+              ? c.hands.map((hand) => shuffledIds(hand.cards.map((card) => card.id)))
+              : [],
     answers: [],
     question: 0,
+    plays: {},
     done: false,
   };
+}
+function shuffledIds(ids: string[]) {
+  let order = shuffle(ids);
+  if (ids.length > 1 && order.every((id, i) => id === ids[i]))
+    order = [...order.slice(1), order[0]];
+  return order;
 }
 export type Action =
   | { type: "move"; from: number; to: number }
@@ -71,7 +88,12 @@ export type Action =
   | { type: "pair"; id: string }
   | { type: "nextRound" }
   | { type: "answer"; id: string }
-  | { type: "nextQuestion" };
+  | { type: "nextQuestion" }
+  | { type: "play"; id: string }
+  | { type: "seal" }
+  | { type: "setCard"; id: string; choice: "hold" | "fold" }
+  | { type: "showHand" }
+  | { type: "nextHand" };
 export function transition(c: Challenge, a: Attempt, action: Action): Attempt {
   if (a.done) return a;
   if (c.type === "pipeline") {
@@ -146,6 +168,68 @@ export function transition(c: Challenge, a: Attempt, action: Action): Attempt {
         ? { ...a, done: true }
         : { ...a, question: a.question + 1 };
   }
+  if (c.type === "staffing") {
+    const seat = c.seats[a.question];
+    const cardIds = [
+      ...c.cards.map((card) => card.id),
+      ...c.decoys.map((card) => card.id),
+    ];
+    if (
+      action.type === "play" &&
+      seat &&
+      a.matched.length < c.seats.length &&
+      cardIds.includes(action.id) &&
+      !a.matched.includes(action.id)
+    ) {
+      const correct = action.id === seat.id;
+      return {
+        ...a,
+        firstPairs: { ...a.firstPairs, [seat.id]: a.firstPairs[seat.id] ?? action.id },
+        matched: correct ? [...a.matched, seat.id] : a.matched,
+        lastPair: { task: seat.id, choice: action.id },
+        question: correct
+          ? Math.min(a.question + 1, c.seats.length - 1)
+          : a.question,
+      };
+    }
+    if (action.type === "seal" && a.matched.length === c.seats.length)
+      return { ...a, done: true };
+  }
+  if (c.type === "holdem") {
+    const hand = c.hands[a.question];
+    const ids = hand.cards.map((card) => card.id);
+    if (
+      action.type === "setCard" &&
+      ids.includes(action.id) &&
+      (action.choice === "hold" || action.choice === "fold")
+    )
+      return {
+        ...a,
+        plays: { ...(a.plays ?? {}), [action.id]: action.choice },
+      };
+    if (
+      action.type === "showHand" &&
+      ids.every((id) => a.plays?.[id] === "hold" || a.plays?.[id] === "fold")
+    ) {
+      const firstPairs = { ...a.firstPairs };
+      for (const id of ids) firstPairs[id] = firstPairs[id] ?? a.plays[id];
+      return { ...a, firstPairs, lastPair: { task: hand.id, choice: "show" } };
+    }
+    const shown =
+      !!a.lastPair &&
+      hand.cards.every(
+        (card) => a.plays?.[card.id] === (card.hold ? "hold" : "fold"),
+      );
+    if (action.type === "nextHand" && shown)
+      return a.question === c.hands.length - 1
+        ? { ...a, done: true }
+        : {
+            ...a,
+            question: a.question + 1,
+            plays: {},
+            lastPair: null,
+          };
+  }
   return a;
 }
 export function outcome(
@@ -166,6 +250,28 @@ export function outcome(
       review: pairs
         .filter((p) => a.firstPairs[p.id] !== p.id)
         .map((p) => `${p.task} → ${p.answer}`),
+    };
+  }
+  if (c.type === "staffing") {
+    const missed = c.seats.filter((seat) => a.firstPairs[seat.id] !== seat.id);
+    return {
+      score: c.seats.length - missed.length,
+      review: missed.map((seat) => {
+        const card = c.cards.find((item) => item.id === seat.id)!;
+        return `${seat.job} → ${card.name}`;
+      }),
+    };
+  }
+  if (c.type === "holdem") {
+    const cards = c.hands.flatMap((hand) => hand.cards);
+    const missed = cards.filter(
+      (card) => a.firstPairs[card.id] !== (card.hold ? "hold" : "fold"),
+    );
+    return {
+      score: cards.length - missed.length,
+      review: missed.map(
+        (card) => `${card.hold ? "Hold" : "Fold"}: ${card.text}`,
+      ),
     };
   }
   return {
@@ -234,6 +340,11 @@ export function validAttempt(v: unknown, c: Challenge): v is Attempt {
     !strings(v.answers) ||
     !Array.isArray(v.optionOrders) ||
     !(
+      v.plays === undefined ||
+      (object(v.plays) &&
+        Object.values(v.plays).every((x) => x === "hold" || x === "fold"))
+    ) ||
+    !(
       v.lastPair === null ||
       (object(v.lastPair) &&
         typeof v.lastPair.task === "string" &&
@@ -284,6 +395,73 @@ export function validAttempt(v: unknown, c: Challenge): v is Attempt {
         .slice(0, a.round)
         .every((r) => r.pairs.every((p) => a.matched.includes(p.id))) &&
       (!a.done || all.every((id) => a.matched.includes(id)))
+    );
+  }
+  if (c.type === "staffing") {
+    const seatIds = c.seats.map((seat) => seat.id);
+    const cardIds = [
+      ...c.cards.map((card) => card.id),
+      ...c.decoys.map((card) => card.id),
+    ];
+    const filled = a.matched.length;
+    const allowed = seatIds.slice(
+      0,
+      Math.min(seatIds.length, filled + (filled < seatIds.length ? 1 : 0)),
+    );
+    return (
+      a.optionOrders.length === 1 &&
+      permutation(a.optionOrders[0], cardIds) &&
+      filled <= seatIds.length &&
+      a.matched.every((id, i) => id === seatIds[i]) &&
+      a.question === Math.min(filled, seatIds.length - 1) &&
+      Object.entries(a.firstPairs).every(
+        ([id, choice]) => seatIds.includes(id) && cardIds.includes(choice),
+      ) &&
+      Object.keys(a.firstPairs).every((id) => allowed.includes(id)) &&
+      a.matched.every((id) => typeof a.firstPairs[id] === "string") &&
+      (a.lastPair === null ||
+        (seatIds.includes(a.lastPair.task) &&
+          cardIds.includes(a.lastPair.choice))) &&
+      (!a.done || filled === seatIds.length)
+    );
+  }
+  if (c.type === "holdem") {
+    const plays = a.plays;
+    const hand = c.hands[a.question];
+    if (!plays) return false;
+    if (
+      !hand ||
+      a.optionOrders.length !== c.hands.length ||
+      !c.hands.every((item, i) =>
+        permutation(
+          a.optionOrders[i],
+          item.cards.map((card) => card.id),
+        ),
+      )
+    )
+      return false;
+    const ids = hand.cards.map((card) => card.id);
+    const earlier = c.hands
+      .slice(0, a.question)
+      .flatMap((item) => item.cards.map((card) => card.id));
+    const known = [...earlier, ...ids];
+    return (
+      Object.keys(plays).every((id) => ids.includes(id)) &&
+      Object.entries(a.firstPairs).every(
+        ([id, choice]) =>
+          known.includes(id) && (choice === "hold" || choice === "fold"),
+      ) &&
+      earlier.every(
+        (id) => a.firstPairs[id] === "hold" || a.firstPairs[id] === "fold",
+      ) &&
+      (a.lastPair === null ||
+        (a.lastPair.task === hand.id &&
+          a.lastPair.choice === "show" &&
+          ids.every((id) => plays[id] === "hold" || plays[id] === "fold"))) &&
+      (!a.done ||
+        c.hands.every((item) =>
+          item.cards.every((card) => a.firstPairs[card.id]),
+        ))
     );
   }
   return (
