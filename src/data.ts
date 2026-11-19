@@ -80,7 +80,13 @@ export type Session = {
   description: string;
   sources: { title: string; url: string }[];
   notes: string[];
-  takeaways: { title: string; text: string; source: Source }[];
+  takeaways: { title: string; text: string; source: Source; also?: Source }[];
+  spotlight?: {
+    eyebrow: string;
+    title: string;
+    lead: string;
+    points: { title: string; text: string; source: Source }[];
+  };
   challenges: Challenge[];
 };
 export const sessions: Session[] = [

@@ -1090,6 +1090,43 @@ dialog p {
   text-transform: uppercase;
   color: #7d606e;
 }
+.spotlight {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 15px;
+  padding: 22px 24px 6px;
+}
+.spotlight h3 {
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  margin: 4px 0 8px;
+}
+.spotlight .lead {
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 760px;
+}
+.spotlight-list {
+  list-style: none;
+  margin: 16px 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.spotlight-list li {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+}
+.spotlight-list strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.spotlight-list p {
+  font-size: 12px;
+  color: var(--muted);
+}
 .icon-staffing {
   background: #eef4f6;
   border-color: #d5e4e8;
@@ -1375,6 +1412,12 @@ dialog p {
   .session-role,
   .session-topic {
     max-width: none;
+  }
+  .spotlight {
+    padding: 16px 15px 4px;
+  }
+  .spotlight h3 {
+    font-size: 20px;
   }
   .coming {
     font-size: 9px;

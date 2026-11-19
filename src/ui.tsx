@@ -76,11 +76,15 @@ export function Icon({
 }
 
 export function Citation({ source }: { source: Source }) {
+  if (source.extra) {
+    return <span className="citation">Extra tip · not from the lecture</span>;
+  }
+  const label = source.doc ?? "Lecture";
+  if (source.pages.length === 0) return <span className="citation">{label}</span>;
+  const pages = source.pages.length === 1 ? "p." : "pp.";
   return (
     <span className="citation">
-      {source.extra
-        ? "Extra tip · not from the lecture"
-        : `${source.doc ?? "Lecture"} ${source.pages.length === 1 ? "p." : "pp."} ${source.pages.join(", ")}`}
+      {label} {pages} {source.pages.join(", ")}
     </span>
   );
 }

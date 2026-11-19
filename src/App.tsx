@@ -300,11 +300,28 @@ export default function App() {
                           <h3>{t.title}</h3>
                           <p>{t.text}</p>
                           <Citation source={t.source} />
+                          {t.also && <Citation source={t.also} />}
                         </div>
                       </article>
                     ))}
                   </div>
                 </div>
+                {s.spotlight && (
+                  <section className="spotlight" aria-labelledby="spotlight-title">
+                    <p className="eyebrow">{s.spotlight.eyebrow}</p>
+                    <h3 id="spotlight-title">{s.spotlight.title}</h3>
+                    <p className="lead">{s.spotlight.lead}</p>
+                    <ol className="spotlight-list">
+                      {s.spotlight.points.map((point) => (
+                        <li key={point.title}>
+                          <strong>{point.title}</strong>
+                          <p>{point.text}</p>
+                          <Citation source={point.source} />
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
                 <div className="section-label">
                   <div>
                     <h3>Your next few minutes</h3>

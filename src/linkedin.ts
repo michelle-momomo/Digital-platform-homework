@@ -1,6 +1,11 @@
-import type { Session } from "./data";
+import type { Session, Source } from "./data";
 
 const deck = "Session 5";
+const notes: Source = {
+  doc: "Class notes, 13 Nov 2026 guest session",
+  pages: [],
+};
+const slide: Source = { doc: deck, pages: [28] };
 
 export const linkedinSession: Session = {
   id: "linkedin",
@@ -10,67 +15,111 @@ export const linkedinSession: Session = {
   role: "Head of Scaled Agency Development, APAC",
   date: "13 Nov 2026",
   topic: "LinkedIn in the Era of LLM, from SEO to GEO",
-  contentVersion: 1,
+  contentVersion: 2,
   description:
-    "Read the guest slide closely. Hold what it says. Fold what it doesn’t.",
+    "The guest slide, then the class: who buys, and how a brand gets into an AI answer.",
   sources: [
     {
-      title: "Session 5 · 13 Nov 2026 · Guest session: LinkedIn, and the GEO agenda line",
+      title: "Session 5 · 13 Nov 2026 · Guest slide and the GEO agenda line",
       url: "/session-5-13nov.pdf",
     },
   ],
   notes: [
-    "Session 5 pages are physical PDF pages (1–29). The guest session is the slide on page 28. The agenda on page 2 names Section Two, Guest Session: LinkedIn, and Section Three, GEO – Generative Engine Optimisation & AI.",
-    "The supplied PDF ends on a thank-you page after that guest introduction. It does not include further GEO method slides. This tab does not add GEO tactics, tools, or a definition beyond the words printed on pages 2 and 28.",
-    "Cindy Leong’s name and title are used only as the guest slide prints them: Cindy Leong, Head of Scaled Agency Development, APAC. Cards you are asked to fold contradict the slide or add a claim it does not make. They are not facts from the speaker.",
-    "LinkedIn Campaign Manager audience figures appear earlier in this same PDF, on pages 17 and 20, inside the audience section. They are not part of this guest-session tab.",
+    "Session 5 pages are physical PDF pages (1–29). The guest slide is page 28. The agenda on page 2 names the guest session and a section called GEO – Generative Engine Optimisation & AI.",
+    "The class notes are the 13 Nov 2026 guest session. This tab uses only points attributed to Cindy Leong: what she said, the English lines she used, and research figures she cited. It leaves out the note-taker’s own commentary, outside research, suggested questions, and the practice quiz.",
+    "Three figures in the recording were unclear and are not stated here: India’s member count, how many members are in China, and what the “5” attached to Singapore meant. A possible “every 90 minutes” line was left out for the same reason. Other numbers appear only as figures she stated or cited.",
+    "Cindy Leong’s name and title follow the guest slide: Cindy Leong, Head of Scaled Agency Development, APAC. In the recording she referred to a search for her own name. Cards you are asked to fold are challenges. They are not claims from the speaker.",
   ],
   takeaways: [
     {
-      title: "The title on the guest slide",
-      text: "The guest slide is titled “LinkedIn in the Era of LLM from SEO TO GEO”, with the subtitle “Programs & Resources”. The session agenda names a following section, “GEO – Generative Engine Optimisation & AI”.",
-      source: { doc: deck, pages: [2, 28] },
-    },
-    {
-      title: "What the slide says LinkedIn is",
-      text: "LinkedIn connects the world’s professionals to make them more productive and successful. The slide says more than 1 billion members worldwide, including executives from every Fortune 500 company, and calls LinkedIn the world’s largest professional network.",
-      source: { doc: deck, pages: [28] },
-    },
-    {
-      title: "Four revenue lines, and where it is based",
-      text: "The slide describes a diversified business model with revenue from Talent Solutions, Marketing Solutions, Sales Solutions and Premium Subscriptions. LinkedIn is headquartered in Silicon Valley and has offices across the globe.",
-      source: { doc: deck, pages: [28] },
+      title: "A professional network that is still adding people",
+      text: "The guest slide calls LinkedIn the world’s largest professional network: more than 1 billion members, including executives from every Fortune 500 company, with revenue from Talent Solutions, Marketing Solutions, Sales Solutions, and Premium Subscriptions. Headquarters are in Silicon Valley. In class she said more than three new members join every second, and she named India as the largest market, still growing quickly. LinkedIn does not run an app in mainland China. Chinese companies still buy ads to reach people outside China. She gave BYD as the example.",
+      source: slide,
+      also: notes,
     },
     {
       title: "Cindy Leong’s title",
-      text: "The slide names Cindy Leong, Head of Scaled Agency Development, APAC.",
-      source: { doc: deck, pages: [28] },
+      text: "The slide names Cindy Leong, Head of Scaled Agency Development, APAC. She leads the Scaled Agency Team in APAC, focusing on empowering independent agencies. She develops strategies that build agency capability and knowledge, and she drives value for clients through tailored support and resources for their agencies.",
+      source: slide,
     },
     {
-      title: "The team she leads",
-      text: "She leads the Scaled Agency Team in APAC, focusing on empowering Independent Agencies.",
-      source: { doc: deck, pages: [28] },
+      title: "Professional data, and a call to sales",
+      text: "She said LinkedIn builds segments from what people type in and from career history, location, and behaviour. Someone who worked in Australia and moves their location to Singapore can be treated as an expat, which is why a telco might offer a mobile plan, broadband, or Wi-Fi. Her line was that LinkedIn is a professional network and cannot be separated from B2B. Some segments are not in the ad platform. She told the room to ask the LinkedIn sales team about those. Wealth bands, from mass market through mass affluent and high net worth to ultra high net worth, are estimates from title, years, industry, and background. They are not a measured bank balance, and she did not say every ad account can use them.",
+      source: notes,
     },
     {
-      title: "What she builds for agencies",
-      text: "She develops and implements strategies to enhance capabilities and knowledge for agencies.",
-      source: { doc: deck, pages: [28] },
+      title: "The one slide she told the room to keep",
+      text: "If you keep one slide, keep the B2B buying journey. She cited a 10 to 15 month cycle, and said not to expect a lead to convert in two or three months. Buying groups are about six people in a smaller firm and can reach about 20 in a large one, while only two or three people may actually use the product. She cited the 95–5 rule, about 5% in market, 40–60% of deals stalling when the group cannot agree, and 81% of buyers choosing a brand they already knew on day one. She mentioned Bain & Company among the research behind these figures. The fear she named is fear of messing up, not fear of missing out, and she quoted “Nobody gets fired for buying IBM.” Brand building and lead generation sit together.",
+      source: notes,
     },
     {
-      title: "What she does for clients",
-      text: "She drives value for clients on LinkedIn through tailored support and resources for their agencies.",
-      source: { doc: deck, pages: [28] },
+      title: "Younger buyers, who also shop",
+      text: "She cited 44% of final decision makers as millennials, and 72% of B2B buyers as millennials or Gen Z. They resist a white paper locked behind a form, they prefer video and podcasts, and they want a brand to say when AI was used. Every B2B decision-maker is also a consumer. She named luxury, cars, high-end electronics, property, and insurance, and she tied a promotion, a new job, or a first job to a possible purchase. Her summary line: LinkedIn is where marketing means business, and where professionals also become premium consumers.",
+      source: notes,
+    },
+    {
+      title: "Discovery is moving into the answer",
+      text: "She said AI is rewriting buyer discovery, and she said the SEO and SEM era is over, to mark how sharp the change is. She cited 83% of AI-assisted searches ending without a click. Her line: “LLM shapes what we see, and LinkedIn shapes what LLM trusts.” In the study she shared, YouTube was first and LinkedIn second. In the earlier round, Reddit was first and LinkedIn second. She credited automatic transcripts, and said a video without one is almost invisible to a model. Her insurance contrast: a 20-year-old asking what cover to buy is a consumer question. An HR lead buying cover for staff in Australia and Singapore is the professional question, and that is where she said LinkedIn’s content is useful.",
+      source: notes,
+      also: { doc: deck, pages: [2, 28] },
+    },
+    {
+      title: "One topic, two executions",
+      text: "People get a short post. The model gets a long, structured article on the same subject. In the study she cited, about 75% of LinkedIn citations came from individual creators and about 25% from company pages, and long-form articles ranked first. Upload the video on LinkedIn and add a transcript, rather than only dropping an outside link. Comments that add a real experience matter more than “great post”. Pay does not by itself earn a citation: test the post organically, then amplify it. Thought Leader Ads promote a person’s post and still show that person’s name. She suggested preparing about 20 approved posts and letting people choose one that fits their work.",
+      source: notes,
+    },
+    {
+      title: "Stay fresh, then justify the spend",
+      text: "She called educational content that answers questions the crown jewel, and she suggested two or three posts a week. In the study she described, about half of what was cited had been published in the past three months, so a citation from a few months ago does not keep itself. When executives post about the company, she said the company page gains followers. The personal-brand risk does not disappear. Her words: there is no way, in her opinion, to run away from it. Keep the posts close to the company, and keep a company brand that can stand without that one person. Measurement is how you justify the spend to a CFO or CEO. She pointed students to the free LinkedIn Marketing Academy, including fundamentals, content strategy, and measurement. She said there are four certifications and did not name the fourth. On search, her own profile advice was a clear photo, a banner, an about line, detailed roles and skills, and posting regularly.",
+      source: notes,
     },
   ],
+  spotlight: {
+    eyebrow: "FROM SEO TO GEO",
+    title: "How she told a brand to get into the answer",
+    lead: "She framed GEO as the shift from being found in a classic search result to being retrieved, cited, and recommended inside a generated answer. A person used to type a query such as “best Christmas gifts”, open links, and compare. She set that against asking an assistant to suggest a gift for a colleague under $100 and taking the answer. If the model cannot see the content, it cannot use it. She called the steps See, Think, and Respond, and she put See first.",
+    points: [
+      {
+        title: "Write the short version and the long one",
+        text: "Humans prefer something they can scan. A model can use detail. Same topic, two executions: a short LinkedIn post for people, and a long article with structure, evidence, and a real answer for the model.",
+        source: notes,
+      },
+      {
+        title: "Four signals she named",
+        text: "Experience, expertise, authoritativeness, and trustworthiness. A real user review, an author who actually knows the field, a source the industry cites, and a claim that is accurate and sourced. She used those signals to explain why a Reddit account of using something, or a YouTube review, can become source material.",
+        source: notes,
+      },
+      {
+        title: "What the cited pieces had in common",
+        text: "In the study she described, 92% had a heading that stated the topic, 75% named the company or the tool, 67% included hard numbers, and every piece used bullets or a numbered list. She said to write “LinkedIn has launched…”, not “our company has launched…”, and not to invent a number just to look specific.",
+        source: notes,
+      },
+      {
+        title: "Answer the buying question",
+        text: "The formats she named were best-of lists, side-by-side comparisons, and how-to-choose guides. Own the high-intent question, whether that is price, a difference, or how to choose. Put a product lead on the product, a sales lead on the customer, and a finance lead on cost and return. When a format works, update it and run it again.",
+        source: notes,
+      },
+      {
+        title: "Fresh, and not necessarily viral",
+        text: "Her line: you do not need virality to be accepted by an LLM. She suggested two or three educational posts a week, and she called content that answers a question the crown jewel. About half the cited material in that study was from the past three months. A strong article from four or five months ago will not hold the place by itself.",
+        source: notes,
+      },
+      {
+        title: "The person and the company page",
+        text: "Company pages were the smaller share of the citations she cited, about 25%, against about 75% from individual creators. Use the company page and the person’s profile together. Thought Leader Ads boost a person’s post without turning it into a company-logo ad. Meaningful comments, the ones that add an experience, give the post more for a model to read than “amazing”.",
+        source: notes,
+      },
+    ],
+  },
   challenges: [
     {
       id: "showdown",
       type: "holdem",
       title: "Show the Hand",
       label: "Hold or fold",
-      minutes: "4 min",
-      description: "Four hands. Keep the line the slide actually prints.",
-      note: "Hold a card only when page 2 or page 28 says it. Fold a card when it contradicts the slide or adds something the deck does not say. Folded cards are not lecture facts. Each card’s first hold or fold is the one that scores.",
+      minutes: "6 min",
+      description: "Six hands. The slide first, then what she said in class.",
+      note: "Hold a card only when the guest slide or the 13 Nov class notes say it. Fold a card when it contradicts them or adds a claim they do not make. Folded cards are not lecture facts. Each card’s first hold or fold is the one that scores.",
       hands: [
         {
           id: "network",
@@ -82,7 +131,7 @@ export const linkedinSession: Session = {
               text: "Connects the world’s professionals to make them more productive and successful.",
               hold: true,
               why: "That is the first line under Programs & Resources on the guest slide.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "billion",
@@ -90,7 +139,7 @@ export const linkedinSession: Session = {
               text: "More than 1 billion members worldwide.",
               hold: true,
               why: "The slide says more than 1 billion members worldwide.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "million",
@@ -98,7 +147,7 @@ export const linkedinSession: Session = {
               text: "More than 1 million members worldwide.",
               hold: false,
               why: "The slide says more than 1 billion members, not 1 million.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "fortune",
@@ -106,7 +155,7 @@ export const linkedinSession: Session = {
               text: "Members include executives from every Fortune 500 company.",
               hold: true,
               why: "The same sentence includes executives from every Fortune 500 company.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "creators",
@@ -114,7 +163,7 @@ export const linkedinSession: Session = {
               text: "Called the world’s largest creator network.",
               hold: false,
               why: "The slide calls LinkedIn the world’s largest professional network.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
           ],
         },
@@ -128,7 +177,7 @@ export const linkedinSession: Session = {
               text: "Revenue comes from Talent Solutions, Marketing Solutions, Sales Solutions and Premium Subscriptions.",
               hold: true,
               why: "Those are the four products the slide names.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "ads-only",
@@ -136,7 +185,7 @@ export const linkedinSession: Session = {
               text: "Revenue comes from Talent Solutions and Advertising Solutions only.",
               hold: false,
               why: "The slide does not name an Advertising Solutions line, and it lists four products, not two.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "valley",
@@ -144,7 +193,7 @@ export const linkedinSession: Session = {
               text: "Headquartered in Silicon Valley.",
               hold: true,
               why: "The slide says LinkedIn is headquartered in Silicon Valley.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "globe",
@@ -152,7 +201,7 @@ export const linkedinSession: Session = {
               text: "Offices across the globe.",
               hold: true,
               why: "The slide says LinkedIn has offices across the globe.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "singapore",
@@ -160,7 +209,7 @@ export const linkedinSession: Session = {
               text: "Headquartered in Singapore, with offices only in APAC.",
               hold: false,
               why: "The slide says Silicon Valley, and offices across the globe. It does not say Singapore or APAC-only offices.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
           ],
         },
@@ -174,7 +223,7 @@ export const linkedinSession: Session = {
               text: "Cindy Leong, Head of Scaled Agency Development, APAC.",
               hold: true,
               why: "That is the name and title printed under the portrait.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "global",
@@ -182,7 +231,7 @@ export const linkedinSession: Session = {
               text: "Cindy Leong, Head of Marketing Solutions, Global.",
               hold: false,
               why: "The slide does not give her that title. It says Head of Scaled Agency Development, APAC.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "apac",
@@ -190,7 +239,7 @@ export const linkedinSession: Session = {
               text: "Leads the Scaled Agency Team in APAC, focusing on empowering Independent Agencies.",
               hold: true,
               why: "That is the first bullet under “Cindy’s role at LinkedIn”.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "emea",
@@ -198,7 +247,7 @@ export const linkedinSession: Session = {
               text: "Leads the Scaled Agency Team in EMEA, focusing on in-house brand teams.",
               hold: false,
               why: "The bullet says APAC, and Independent Agencies. It does not say EMEA or in-house brand teams.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "both",
@@ -206,13 +255,13 @@ export const linkedinSession: Session = {
               text: "Develops strategies that build agency capabilities and knowledge, and drives client value through tailored support and resources for their agencies.",
               hold: true,
               why: "That pairs the second and third bullets: capabilities and knowledge for agencies, and tailored support and resources for their clients.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
           ],
         },
         {
           id: "geo",
-          board: "What these slides actually say about GEO",
+          board: "What the slides name, before the class fills it in",
           cards: [
             {
               id: "era",
@@ -220,7 +269,7 @@ export const linkedinSession: Session = {
               text: "The guest slide is titled “LinkedIn in the Era of LLM from SEO TO GEO”.",
               hold: true,
               why: "That title is printed at the top of the guest slide.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "programs",
@@ -228,7 +277,7 @@ export const linkedinSession: Session = {
               text: "The subtitle under that title is “Programs & Resources”.",
               hold: true,
               why: "Programs & Resources sits directly under the title.",
-              source: { doc: deck, pages: [28] },
+              source: slide,
             },
             {
               id: "agenda",
@@ -243,7 +292,7 @@ export const linkedinSession: Session = {
               rank: "J",
               text: "The guest slide lists a five-step GEO playbook.",
               hold: false,
-              why: "The guest slide does not list GEO steps. The agenda names the section and does not add a method.",
+              why: "The slide and the agenda name GEO. They do not print a five-step playbook. The tactics she taught in class are a different list.",
               source: { doc: deck, pages: [2, 28] },
             },
             {
@@ -253,6 +302,98 @@ export const linkedinSession: Session = {
               hold: false,
               why: "Nothing on the guest slide or the agenda says GEO replaced Talent Solutions. Talent Solutions is still one of the four revenue lines.",
               source: { doc: deck, pages: [2, 28] },
+            },
+          ],
+        },
+        {
+          id: "buying",
+          board: "The B2B buying journey she told the room to remember",
+          cards: [
+            {
+              id: "inmarket",
+              rank: "A",
+              text: "About 5% of potential buyers are in market. That is the 95–5 rule she cited.",
+              hold: true,
+              why: "She cited the 95–5 rule and told the room not to market only to the people who are ready to buy now.",
+              source: notes,
+            },
+            {
+              id: "messing",
+              rank: "K",
+              text: "The fear she named is fear of messing up, not fear of missing out.",
+              hold: true,
+              why: "She contrasted fear of messing up, a career risk, with fear of missing out.",
+              source: notes,
+            },
+            {
+              id: "ibm",
+              rank: "Q",
+              text: "She quoted “Nobody gets fired for buying IBM.”",
+              hold: true,
+              why: "That was her example of a choice a buyer can defend inside the company.",
+              source: notes,
+            },
+            {
+              id: "twomonths",
+              rank: "J",
+              text: "She said a B2B lead should convert within two or three months.",
+              hold: false,
+              why: "She cited a 10 to 15 month cycle, and said not to expect the conversion in two or three months.",
+              source: notes,
+            },
+            {
+              id: "brandwait",
+              rank: "10",
+              text: "Brand building can wait, because lead generation already covers the buyers who matter.",
+              hold: false,
+              why: "She said only about 5% are in market, cited 81% choosing a brand they already knew on day one, and argued for brand building and lead generation together.",
+              source: notes,
+            },
+          ],
+        },
+        {
+          id: "geoplay",
+          board: "GEO tactics from the 13 Nov class",
+          cards: [
+            {
+              id: "twoexec",
+              rank: "A",
+              text: "One topic, two executions: a short post for people, a long article for the model.",
+              hold: true,
+              why: "That was her direct answer on writing for humans and for AI at the same time.",
+              source: notes,
+            },
+            {
+              id: "noviral",
+              rank: "K",
+              text: "You do not need a viral post to be accepted by an LLM.",
+              hold: true,
+              why: "Her line was that you do not need virality to be accepted by an LLM.",
+              source: notes,
+            },
+            {
+              id: "creators75",
+              rank: "Q",
+              text: "In the study she cited, about 75% of LinkedIn’s AI citations came from individual creators.",
+              hold: true,
+              why: "She cited about 75% from individual creators and about 25% from company pages.",
+              source: notes,
+            },
+            {
+              id: "companymost",
+              rank: "J",
+              text: "In that study, company pages supplied most of the citations.",
+              hold: false,
+              why: "Company pages were the smaller share she cited, about 25%, not most of the citations.",
+              source: notes,
+            },
+            {
+              id: "paidcite",
+              rank: "10",
+              text: "Paying to boost a post is what makes an LLM cite it.",
+              hold: false,
+              why: "She said paid amplification does not directly earn a citation. Test the post organically, then amplify the ones that work.",
+              source: notes,
             },
           ],
         },

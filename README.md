@@ -33,7 +33,7 @@ npm run preview
 
 The design → build → commit/push → Vercel pipeline combines the workflow on pages 4, 7, 20 and 21; it is explicitly described as one workflow. The file round concerns a simple static HTML/CSS/JavaScript site, not the file structure of this React implementation. The localStorage decision is supplemental learning content. The slide's example prompt about a 15-lesson course is not used as an assignment requirement. LaunchLab is the name in the source title. The Vibe Coding date is the course date 9 Oct 2026. The lecture PDF does not name an individual speaker, so none is shown.
 
-Agentic AI uses Session 4 (media-team and guest-session pages) and Nick Goh’s 55-page deck. Deck page numbers follow the original deck: part 2’s first page is deck page 29. LinkedIn uses Session 5 pages 2 and 28 only. The agenda names a GEO section, and the supplied PDF does not include GEO method slides, so none are invented. Cindy Leong’s name and title are copied from the guest slide.
+Agentic AI uses Session 4 (media-team and guest-session pages) and Nick Goh’s 55-page deck. Deck page numbers follow the original deck: part 2’s first page is deck page 29. LinkedIn uses Session 5 pages 2 and 28 for the guest slide, plus class notes from Cindy Leong’s 13 Nov 2026 talk for the GEO section the PDF did not include. Only points attributed to her are used. Counts the notes mark as uncertain are omitted. Her name and title follow the guest slide.
 
 The app has not been published or pushed by this implementation task.
 

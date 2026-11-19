@@ -310,10 +310,10 @@ describe("holdem", () => {
   it("keeps the first call when a miss is corrected", () => {
     const perfect = deal(createAttempt(showdown));
     expect(perfect.done).toBe(true);
-    expect(outcome(showdown, perfect)).toEqual({ score: 20, review: [] });
+    expect(outcome(showdown, perfect)).toEqual({ score: 30, review: [] });
     const missed = deal(createAttempt(showdown), true);
     expect(missed.done).toBe(true);
-    expect(outcome(showdown, missed).score).toBe(19);
+    expect(outcome(showdown, missed).score).toBe(29);
   });
   it("round-trips an in-progress hand and a finished chain", () => {
     let a = createAttempt(handoff);

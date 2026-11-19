@@ -62,9 +62,14 @@ test("agentic handoff and linkedin showdown are playable", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: /Cindy Leong.s title/ }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "How she told a brand to get into the answer" }),
+  ).toBeVisible();
+  await expect(page.getByText("Class notes, 13 Nov 2026 guest session").first()).toBeVisible();
+  await expect(page.getByText(/does not include further GEO/)).toHaveCount(0);
   await noOverflow(page);
   await page.getByRole("button", { name: "Start challenge" }).click();
-  await expect(page.getByText("Hand 1 of 4")).toBeVisible();
+  await expect(page.getByText("Hand 1 of 6")).toBeVisible();
   await noOverflow(page);
   const calls: [RegExp, "Hold" | "Fold"][] = [
     [/Connects the world/, "Hold"],
@@ -86,7 +91,7 @@ test("agentic handoff and linkedin showdown are playable", async ({ page }) => {
   await page.getByRole("button", { name: /Hold\. Connects the world/ }).click();
   await expect(page.getByRole("button", { name: "Next hand" })).toBeEnabled();
   await page.getByRole("button", { name: "Next hand" }).click();
-  await expect(page.getByText("Hand 2 of 4")).toBeVisible();
+  await expect(page.getByText("Hand 2 of 6")).toBeVisible();
   const rest: [RegExp, "Hold" | "Fold"][][] = [
     [
       [/Talent Solutions, Marketing Solutions/, "Hold"],
@@ -109,6 +114,20 @@ test("agentic handoff and linkedin showdown are playable", async ({ page }) => {
       [/five-step GEO playbook/, "Fold"],
       [/replaced Talent Solutions/, "Fold"],
     ],
+    [
+      [/95–5 rule/, "Hold"],
+      [/fear of messing up/, "Hold"],
+      [/Nobody gets fired for buying IBM/, "Hold"],
+      [/convert within two or three months/, "Fold"],
+      [/Brand building can wait/, "Fold"],
+    ],
+    [
+      [/two executions/, "Hold"],
+      [/do not need a viral post/, "Hold"],
+      [/75% of LinkedIn/, "Hold"],
+      [/company pages supplied most/, "Fold"],
+      [/Paying to boost a post/, "Fold"],
+    ],
   ];
   for (let i = 0; i < rest.length; i++) {
     for (const [pattern, call] of rest[i]) {
@@ -123,7 +142,7 @@ test("agentic handoff and linkedin showdown are playable", async ({ page }) => {
     await page.getByRole("button", { name: next }).click();
   }
   await expect(page.getByText("CHALLENGE COMPLETED", { exact: true })).toBeVisible();
-  await expect(page.getByText("19 / 20").first()).toBeVisible();
+  await expect(page.getByText("29 / 30").first()).toBeVisible();
   await noOverflow(page);
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("after-class.progress")!),
@@ -134,8 +153,8 @@ test("agentic handoff and linkedin showdown are playable", async ({ page }) => {
     completed: true,
   });
   expect(stored.sessions["linkedin"].results.showdown).toMatchObject({
-    latest: 19,
-    best: 19,
+    latest: 29,
+    best: 29,
     completed: true,
   });
 });
