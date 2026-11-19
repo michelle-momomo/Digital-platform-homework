@@ -240,14 +240,18 @@ export function WorldMap({ onEdit }: { onEdit: () => void }) {
                     {region.locked ? "" : ` · ${stars}/${region.levels.length * 3}★`}
                   </small>
                 </span>
-                <IslandArt region={region} stars={stars} />
+                <span className="isle-art">
+                  <IslandArt region={region} stars={stars} />
+                  {here.id === region.id && !region.locked && (
+                    <Walker
+                      character={character}
+                      walking={walking}
+                      index={standOn(region, game.save.levels)}
+                      count={region.levels.length}
+                    />
+                  )}
+                </span>
               </button>
-              {here.id === region.id && !region.locked && (
-                <div className={`walker ${walking ? "hop" : "bounce"}`}>
-                  <Sprite character={character} />
-                  <em>{character.name}</em>
-                </div>
-              )}
             </div>
           );
         })}
@@ -256,9 +260,45 @@ export function WorldMap({ onEdit }: { onEdit: () => void }) {
   );
 }
 
+function standOn(region: Region, levels: Record<string, { stars: number }>) {
+  const next = region.levels.findIndex((level) => !levels[levelKey(region.id, level.id)]);
+  return next === -1 ? region.levels.length - 1 : next;
+}
+
+function dotAt(index: number, count: number) {
+  const t = count <= 1 ? 0.5 : index / (count - 1);
+  return {
+    x: 52 + t * 236,
+    y: 176 - Math.sin(t * Math.PI) * 34,
+  };
+}
+
+function Walker({
+  character,
+  walking,
+  index,
+  count,
+}: {
+  character: Character;
+  walking: boolean;
+  index: number;
+  count: number;
+}) {
+  const dot = dotAt(index, count);
+  return (
+    <div
+      className={`walker ${walking ? "hop" : "bounce"}`}
+      style={{ left: `${(dot.x / 340) * 100}%`, top: `${(dot.y / 240) * 100}%` }}
+    >
+      <em>{character.name}</em>
+      <Sprite character={character} label="" />
+    </div>
+  );
+}
+
 function MapArt() {
   return (
-    <svg className="map-art" viewBox="0 0 1000 760" aria-hidden="true">
+    <svg className="map-art" viewBox="0 0 1000 1100" aria-hidden="true">
       <defs>
         <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
           <circle cx="3" cy="3" r="1.4" fill="#F6D5E2" />
@@ -272,10 +312,10 @@ function MapArt() {
         <ellipse cx="820" cy="120" rx="40" ry="16" fill="#fff" />
         <ellipse cx="860" cy="128" rx="24" ry="12" fill="#fff" />
       </g>
-      <path d="M180 360 C 300 250, 380 200, 500 190" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
-      <path d="M520 200 C 680 180, 740 260, 820 360" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
-      <path d="M200 420 C 220 520, 250 580, 300 620" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
-      <path d="M800 430 C 790 540, 760 600, 720 640" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
+      <path d="M240 620 C 320 420, 380 340, 500 250" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
+      <path d="M540 250 C 640 300, 700 420, 760 620" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
+      <path d="M250 700 C 260 820, 280 900, 300 960" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
+      <path d="M760 700 C 750 820, 740 900, 720 960" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
       <circle cx="90" cy="150" r="5" fill="#F8C8DC" />
       <circle cx="930" cy="80" r="6" fill="#FFF3B0" />
       <circle cx="860" cy="200" r="4" fill="#C5E4F7" />
@@ -286,39 +326,106 @@ function MapArt() {
 function IslandArt({ region, stars }: { region: Region; stars: number }) {
   const grass = region.locked ? "#E4E0E8" : region.color;
   const cliff = region.locked ? "#C8C2CE" : "#E7C3A8";
+  const dots = region.levels.map((_, i) => dotAt(i, region.levels.length));
   const done = region.levels.map((_, i) => stars >= (i + 1) * 3);
   return (
-    <svg viewBox="0 0 220 150" className="island-art" aria-hidden="true">
-      <path d="M30 78 C 20 108, 50 132, 110 136 C 180 140, 210 112, 196 82 C 210 60, 180 36, 120 32 C 60 28, 36 50, 30 78 Z" fill={cliff} />
-      <path d="M34 70 C 28 98, 54 120, 110 122 C 172 124, 198 102, 188 74 C 198 54, 170 34, 118 32 C 64 30, 40 46, 34 70 Z" fill={grass} />
-      <ellipse cx="88" cy="58" rx="36" ry="14" fill="#fff" opacity="0.35" />
+    <svg viewBox="0 0 340 240" className="island-art" aria-hidden="true">
+      <ellipse cx="70" cy="36" rx="22" ry="10" fill="#fff" opacity="0.9" />
+      <ellipse cx="88" cy="40" rx="14" ry="8" fill="#fff" />
+      <ellipse cx="270" cy="28" rx="26" ry="11" fill="#fff" opacity="0.85" />
+      <path d="M28 118 C 8 168, 40 214, 170 222 C 300 230, 338 176, 318 124 C 340 86, 286 48, 176 42 C 70 36, 40 70, 28 118 Z" fill={cliff} />
+      <path d="M40 108 C 26 156, 58 196, 170 202 C 286 208, 322 160, 304 114 C 322 80, 274 52, 176 48 C 82 44, 50 68, 40 108 Z" fill={grass} />
+      <ellipse cx="118" cy="78" rx="48" ry="16" fill="#fff" opacity="0.28" />
       {!region.locked && (
         <>
-          <rect x="46" y="78" width="3" height="10" fill="#C68642" />
-          <circle cx="47" cy="74" r="8" fill="#7DCEA0" />
-          <circle cx="168" cy="96" r="4" fill="#F4A4C4" />
-          <circle cx="178" cy="92" r="3" fill="#FFF3B0" />
-          <rect x="58" y="100" width="6" height="4" rx="2" fill="#F08A74" />
-          <rect x="60" y="96" width="2" height="4" fill="#fff" />
+          <ellipse cx="78" cy="150" rx="22" ry="10" fill="#9FD4F2" />
+          <ellipse cx="74" cy="148" rx="6" ry="3" fill="#DFF3C8" />
+          <path d="M108 156 q10 -10 20 0 q10 -10 20 0" fill="none" stroke="#C68642" strokeWidth="3" />
+          <path d="M108 160 q10 8 20 0 q10 8 20 0" fill="none" stroke="#E7C3A8" strokeWidth="3" />
+          <g>
+            <rect x="46" y="118" width="5" height="18" fill="#C68642" />
+            <circle cx="48" cy="112" r="12" fill="#7DCEA0" />
+            <circle cx="40" cy="116" r="8" fill="#8ED6B0" />
+            <rect x="250" y="128" width="5" height="16" fill="#C68642" />
+            <circle cx="252" cy="122" r="11" fill="#6FCF97" />
+            <rect x="292" y="150" width="4" height="14" fill="#C68642" />
+            <circle cx="294" cy="146" r="9" fill="#7DCEA0" />
+          </g>
+          <circle cx="210" cy="168" r="5" fill="#F4A4C4" />
+          <circle cx="224" cy="162" r="4" fill="#FFF3B0" />
+          <circle cx="236" cy="174" r="3.5" fill="#F08A74" />
+          <circle cx="130" cy="176" r="4" fill="#fff" />
+          <circle cx="142" cy="170" r="3" fill="#F8C8DC" />
+          <rect x="168" y="186" width="10" height="6" rx="3" fill="#F08A74" />
+          <rect x="172" y="180" width="2" height="6" fill="#fff" />
         </>
       )}
       {region.locked && (
-        <>
-          <rect x="96" y="70" width="28" height="20" rx="4" fill="#fff" opacity="0.8" />
-          <path d="M102 70 v-6 a12 12 0 0 1 16 0 v6" fill="none" stroke="#8A7896" strokeWidth="3" />
-        </>
+        <g opacity="0.85">
+          <ellipse cx="170" cy="120" rx="70" ry="28" fill="#fff" />
+          <rect x="154" y="112" width="32" height="22" rx="5" fill="#fff" />
+          <path d="M160 112 v-8 a14 14 0 0 1 20 0 v8" fill="none" stroke="#8A7896" strokeWidth="3" />
+        </g>
       )}
-      {region.landmark === "rocket" && <g transform="translate(112 28) scale(1.7)"><rect x="8" y="0" width="6" height="6" fill="#F08A74" /><rect x="6" y="6" width="10" height="18" fill="#fff" /><rect x="9" y="12" width="4" height="4" fill="#8EC8F5" /><rect x="4" y="20" width="4" height="6" fill="#F4A4C4" /><rect x="14" y="20" width="4" height="6" fill="#F4A4C4" /><rect x="9" y="24" width="4" height="6" fill="#FFF3B0" /></g>}
-      {region.landmark === "robot" && <g transform="translate(108 30) scale(1.6)"><rect x="10" y="0" width="4" height="6" fill="#7A6B86" /><rect x="4" y="6" width="16" height="14" rx="2" fill="#fff" /><rect x="8" y="11" width="2" height="2" fill="#3A3148" /><rect x="14" y="11" width="2" height="2" fill="#3A3148" /><rect x="6" y="20" width="12" height="10" fill="#C5B3F5" /></g>}
-      {region.landmark === "tower" && <g transform="translate(108 22) scale(1.5)"><rect x="8" y="10" width="12" height="28" fill="#fff" /><rect x="12" y="16" width="4" height="6" fill="#8EC8F5" /><rect x="22" y="4" width="16" height="12" rx="6" fill="#fff" /><rect x="26" y="8" width="8" height="3" fill="#F4A4C4" /></g>}
+      {region.landmark === "rocket" && (
+        <g transform="translate(146 18) scale(2.4)">
+          <rect x="8" y="0" width="6" height="6" fill="#F08A74" />
+          <rect x="6" y="6" width="10" height="18" fill="#fff" />
+          <rect x="9" y="12" width="4" height="4" fill="#8EC8F5" />
+          <rect x="4" y="20" width="4" height="6" fill="#F4A4C4" />
+          <rect x="14" y="20" width="4" height="6" fill="#F4A4C4" />
+          <rect x="9" y="24" width="4" height="6" fill="#FFF3B0" />
+        </g>
+      )}
+      {region.landmark === "robot" && (
+        <g transform="translate(138 22) scale(2.3)">
+          <rect x="10" y="0" width="4" height="6" fill="#7A6B86" />
+          <rect x="2" y="6" width="20" height="16" rx="3" fill="#fff" />
+          <rect x="7" y="11" width="3" height="3" fill="#3A3148" />
+          <rect x="14" y="11" width="3" height="3" fill="#3A3148" />
+          <rect x="4" y="22" width="16" height="12" rx="2" fill="#C5B3F5" />
+        </g>
+      )}
+      {region.landmark === "tower" && (
+        <g transform="translate(142 8) scale(2.2)">
+          <rect x="8" y="14" width="14" height="36" fill="#fff" />
+          <rect x="11" y="20" width="4" height="7" fill="#8EC8F5" />
+          <rect x="11" y="32" width="4" height="7" fill="#8EC8F5" />
+          <rect x="24" y="6" width="22" height="16" rx="8" fill="#fff" />
+          <rect x="29" y="11" width="12" height="4" fill="#F4A4C4" />
+        </g>
+      )}
+      {!region.locked && (
+        <polyline
+          points={dots.map((dot) => `${dot.x},${dot.y}`).join(" ")}
+          fill="none"
+          stroke="#fff"
+          strokeWidth="6"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      )}
       {!region.locked &&
-        region.levels.map((_, i) => {
-          const t = i / Math.max(1, region.levels.length - 1);
-          const x = 36 + t * 110;
-          const y = 108 - Math.sin(t * Math.PI) * 18;
-          return <circle key={i} cx={x} cy={y} r="5" fill={done[i] ? "#F2C14E" : "#fff"} stroke="#4A3B55" strokeWidth="1" />;
-        })}
-      {!region.locked && <path d="M150 96 l8 10 h-6 v8 h-4 v-8 h-6 z" fill="#fff" stroke="#4A3B55" />}
+        dots.map((dot, i) => (
+          <g key={i}>
+            <circle cx={dot.x} cy={dot.y} r="11" fill={done[i] ? "#F2C14E" : "#fff"} stroke="#4A3B55" strokeWidth="1.6" />
+            <text x={dot.x} y={dot.y + 3.5} textAnchor="middle" fontSize="11" fontWeight="800" fill="#4A3B55">
+              {i + 1}
+            </text>
+          </g>
+        ))}
+      {!region.locked && (
+        <g transform="translate(292 158)">
+          <rect x="0" y="0" width="3" height="28" fill="#4A3B55" />
+          <rect x="3" y="2" width="18" height="12" fill="#fff" />
+          <rect x="3" y="2" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="12" y="2" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="7.5" y="6" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="16.5" y="6" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="3" y="10" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="12" y="10" width="4.5" height="4" fill="#4A3B55" />
+        </g>
+      )}
     </svg>
   );
 }
@@ -600,6 +707,36 @@ export function Admin() {
           ))}
         </tbody>
       </table>
+    </main>
+  );
+}
+
+export function SpriteSheet() {
+  const girl = GIRL_HAIR.map((hair) => ({ gender: "girl" as const, hair: hair.id, label: hair.label }));
+  const boy = BOY_HAIR.map((hair) => ({ gender: "boy" as const, hair: hair.id, label: hair.label }));
+  return (
+    <main className="sheet-page">
+      <h1>Hairstyles</h1>
+      <div className="sheet-grid">
+        {[...girl, ...boy].map((item) => (
+          <figure key={item.hair}>
+            <Sprite
+              character={{
+                gender: item.gender,
+                hair: item.hair,
+                hairColor: "#C5B3F5",
+                skin: "#F6C8A4",
+                outfit: item.gender === "girl" ? "#F8C8DC" : "#C5E4F7",
+              }}
+              className="big"
+              label={`${item.gender} ${item.label}`}
+            />
+            <figcaption>
+              {item.gender} · {item.label}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
     </main>
   );
 }

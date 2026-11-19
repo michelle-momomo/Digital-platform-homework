@@ -152,57 +152,78 @@ function blob(
     }
   }
 }
+function safeHair(
+  g: (string | null)[][],
+  x: number,
+  y: number,
+  c: string,
+) {
+  if (x >= 10 && x <= 21 && y >= 14) return;
+  dot(g, x, y, c);
+}
+function hairBlob(
+  g: (string | null)[][],
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  c: string,
+) {
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+    for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+      const dx = (x + 0.5 - cx) / rx;
+      const dy = (y + 0.5 - cy) / ry;
+      if (dx * dx + dy * dy <= 1) safeHair(g, x, y, c);
+    }
+  }
+}
 function paintHair(g: (string | null)[][], style: HairId, c: string, hi: string, skin: string) {
-  const cap = () => blob(g, 16, 11, 8.2, 6.2, c);
+  const cap = () => hairBlob(g, 16, 10, 9, 5.4, c);
   if (style === "bob") {
     cap();
-    blob(g, 9, 16, 2.4, 5, c);
-    blob(g, 23, 16, 2.4, 5, c);
-    rect(g, 10, 9, 12, 2, c);
+    hairBlob(g, 8, 16, 2.2, 5.5, c);
+    hairBlob(g, 23, 16, 2.2, 5.5, c);
   } else if (style === "pigtails") {
     cap();
-    blob(g, 6, 18, 3.2, 4.2, c);
-    blob(g, 26, 18, 3.2, 4.2, c);
-    dot(g, 6, 18, "#fff");
-    dot(g, 26, 18, "#fff");
+    hairBlob(g, 5, 18, 3.3, 4.4, c);
+    hairBlob(g, 27, 18, 3.3, 4.4, c);
+    safeHair(g, 5, 17, "#fff");
+    safeHair(g, 26, 17, "#fff");
   } else if (style === "bun") {
-    blob(g, 16, 5, 3.4, 3.2, c);
+    hairBlob(g, 16, 4, 3.6, 3.2, c);
     cap();
-    dot(g, 15, 4, hi);
+    safeHair(g, 15, 3, hi);
   } else if (style === "long") {
     cap();
-    rect(g, 7, 14, 3, 16, c);
-    rect(g, 22, 14, 3, 16, c);
-    blob(g, 8, 30, 2.2, 2, c);
-    blob(g, 23, 30, 2.2, 2, c);
+    for (let y = 14; y < 34; y++) {
+      for (let x = 6; x <= 8; x++) safeHair(g, x, y, c);
+      for (let x = 23; x <= 25; x++) safeHair(g, x, y, c);
+    }
   } else if (style === "puffs") {
-    blob(g, 7, 10, 4, 4, c);
-    blob(g, 25, 10, 4, 4, c);
+    hairBlob(g, 6, 11, 4.2, 4.2, c);
+    hairBlob(g, 26, 11, 4.2, 4.2, c);
     cap();
-    dot(g, 6, 9, hi);
-    dot(g, 24, 9, hi);
+    safeHair(g, 5, 9, hi);
+    safeHair(g, 25, 9, hi);
   } else if (style === "spiky") {
-    rect(g, 8, 4, 2, 5, c);
-    rect(g, 12, 2, 2, 6, c);
-    rect(g, 16, 3, 2, 5, c);
-    rect(g, 20, 4, 2, 5, c);
+    for (const x of [9, 13, 17, 21]) rect(g, x, 3, 2, 7, c);
     cap();
   } else if (style === "side") {
-    blob(g, 11, 9, 6, 5, c);
-    blob(g, 20, 11, 4, 3.5, c);
-    rect(g, 8, 12, 4, 4, c);
+    hairBlob(g, 10, 9, 6.5, 4.5, c);
+    hairBlob(g, 20, 11, 4, 3, c);
+    for (let y = 12; y < 17; y++) safeHair(g, 7, y, c);
   } else if (style === "curly") {
-    blob(g, 9, 7, 2.4, 2.4, c);
-    blob(g, 13, 5, 2.6, 2.6, c);
-    blob(g, 18, 5, 2.6, 2.6, c);
-    blob(g, 22, 8, 2.3, 2.3, c);
+    hairBlob(g, 9, 7, 2.6, 2.6, c);
+    hairBlob(g, 14, 5, 2.8, 2.8, c);
+    hairBlob(g, 19, 5, 2.8, 2.8, c);
+    hairBlob(g, 23, 8, 2.4, 2.4, c);
     cap();
   } else {
-    blob(g, 16, 10, 7.2, 2.2, c);
-    blob(g, 8, 14, 1.5, 1.6, skin);
-    blob(g, 24, 14, 1.5, 1.6, skin);
+    hairBlob(g, 16, 9, 8, 2.4, c);
+    blob(g, 7, 15, 1.6, 1.8, skin);
+    blob(g, 24, 15, 1.6, 1.8, skin);
   }
-  rect(g, 12, 8, 3, 2, hi);
+  for (let x = 13; x <= 16; x++) safeHair(g, x, 8, hi);
 }
 function outline(g: (string | null)[][]) {
   const next = empty();
@@ -250,21 +271,15 @@ export function spriteGrid(a: Pick<Character, "gender" | "hair" | "hairColor" | 
   rect(g, 9, 24, 3, 4, skin);
   rect(g, 20, 24, 3, 4, skin);
   rect(g, 15, 21, 2, 3, skin);
-  blob(g, 16, 13, 8.4, 8.2, skin);
-  rect(g, 11, 14, 2, 2, ink);
-  rect(g, 19, 14, 2, 2, ink);
-  dot(g, 11, 14, "#fff");
-  dot(g, 19, 14, "#fff");
-  rect(g, 9, 17, 2, 1, "#F3A8C4");
-  rect(g, 21, 17, 2, 1, "#F3A8C4");
-  rect(g, 15, 18, 2, 1, "#C98496");
-  paintHair(g, a.hair, a.hairColor, shade(a.hairColor, 48), skin);
-  rect(g, 11, 14, 2, 2, ink);
-  rect(g, 19, 14, 2, 2, ink);
-  dot(g, 11, 14, "#fff");
-  dot(g, 19, 14, "#fff");
-  rect(g, 9, 17, 2, 1, "#F3A8C4");
-  rect(g, 21, 17, 2, 1, "#F3A8C4");
-  rect(g, 15, 18, 2, 1, "#C98496");
+  blob(g, 16, 16, 8.6, 8.4, skin);
+  paintHair(g, a.hair, a.hairColor, shade(a.hairColor, 55), skin);
+  blob(g, 16, 18.2, 6.4, 5.2, skin);
+  rect(g, 11, 15, 3, 3, ink);
+  rect(g, 18, 15, 3, 3, ink);
+  dot(g, 11, 15, "#fff");
+  dot(g, 18, 15, "#fff");
+  rect(g, 9, 19, 2, 1, "#F3A8C4");
+  rect(g, 21, 19, 2, 1, "#F3A8C4");
+  rect(g, 15, 21, 3, 1, "#C98496");
   return outline(g);
 }

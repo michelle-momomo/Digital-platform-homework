@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sprite } from "./AvatarView";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region, Step } from "./content";
 import { gradedCount } from "./content";
-import { rate } from "./logic";
+import { rate, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
 import type { LevelResult } from "./storage";
@@ -103,40 +103,54 @@ export function PlayView({
 
   const meter = total === 0 ? 0 : Math.round((correct.current / total) * 100);
 
+  const shownStars = Math.min(3, correct.current);
+
   return (
-    <main className="sheet">
-      <button className="text-btn" onClick={onExit}>
-        ← Map path
-      </button>
-      <div className="play-top">
-        <p>
-          {region.title} · {index + 1}/{region.levels.length}
-        </p>
-        <p>{level.title}</p>
-      </div>
-      <div className="hud">
+    <main className={`sheet theme-${region.id}`}>
+      <header className="hud">
+        <button className="text-btn" onClick={onExit}>
+          ← Map path
+        </button>
+        <span className="level-dots" aria-label={`Level ${index + 1} of ${region.levels.length}`}>
+          {region.levels.map((item, i) => (
+            <i key={item.id} className={i === index ? "now" : i < index ? "done" : ""} />
+          ))}
+        </span>
+        <span className="stars" aria-label={`${shownStars} stars`}>
+          {[1, 2, 3].map((star) => (
+            <i key={star} className={star <= shownStars ? "on" : ""} />
+          ))}
+        </span>
         <b className="combo" key={combo.current}>
           Combo {combo.current}
         </b>
         <span className="timebar" aria-label={left > 0 ? `Bonus ${left}s` : "Bonus over"}>
           <i style={{ width: `${(left / Math.max(1, Math.round(level.limitMs / 1000))) * 100}%` }} />
         </span>
-        {region.id === "linkedin" && (
-          <span className="gauge" aria-label="AI citation meter">
-            <i style={{ width: `${meter}%` }} />
-            <em>Citations</em>
-          </span>
-        )}
-      </div>
-      <div className="scene">
+        <button className="ghost tiny" aria-pressed={muted} onClick={() => game.setMute(!game.save.mute)}>
+          {muted ? "Muted" : "Sound"}
+        </button>
+      </header>
+      <div className={`scene ${ready ? "cleared" : ""}`}>
+        <div className="sky" aria-hidden="true" />
         {game.save.character && (
           <div className={`actor ${mood}`}>
             <Sprite character={game.save.character} className={mood === "happy" ? "hop" : "bounce"} />
-            {mood === "sad" && <span className="sweat">!</span>}
+            {mood === "sad" && <span className="sweat">💧</span>}
+            {mood === "happy" && <span className="flystar" key={tick}>★</span>}
           </div>
         )}
         <div className="board">
+          <p className="kicker">
+            {region.title} · {level.title}
+          </p>
       <p className="prompt">{step.prompt}</p>
+      {region.id === "linkedin" && (
+        <div className="meter-row">
+          <b className="rank">{voiceRank(game.cleared("linkedin"))}</b>
+          <span className="sr-only">Citation progress {meter}%</span>
+        </div>
+      )}
       {step.kind === "order" && (
         <OrderPlay
           key={stepIndex}
@@ -150,9 +164,10 @@ export function PlayView({
         />
       )}
       {step.kind === "choice" && (
-        <ChoicePlay
-          key={stepIndex}
-          step={step}
+          <ChoicePlay
+            key={stepIndex}
+            preview={region.id === "linkedin"}
+            step={step}
           onMark={(ok) => mark(`${stepIndex}:choice`, ok)}
           onReveal={(line, src) => {
             setWhy(line);
@@ -197,8 +212,13 @@ export function PlayView({
         </button>
       )}
         </div>
+        {mood === "happy" && <ConfettiLite />}
+        {region.id === "vibe" && (
+          <div className={`rocket ${ready ? "launch" : ""}`} aria-hidden="true">
+            <span>🚀</span>
+          </div>
+        )}
       </div>
-      {mood === "happy" && <ConfettiLite />}
       <span className="sr-only">{tick}</span>
     </main>
   );
@@ -214,6 +234,13 @@ function ConfettiLite() {
   );
 }
 
+function iconFor(label: string) {
+  const icons = ["✦", "❀", "★", "☁", "♥", "✎", "✿", "◆"];
+  let n = 0;
+  for (const ch of label) n += ch.charCodeAt(0);
+  return icons[n % icons.length];
+}
+
 function OrderPlay({
   step,
   onMark,
@@ -225,42 +252,81 @@ function OrderPlay({
 }) {
   const [order, setOrder] = useState(() => dealOrder(step));
   const [drag, setDrag] = useState<number | null>(null);
+  const [picked, setPicked] = useState<number | null>(null);
+  const list = useRef<HTMLOListElement>(null);
+  const moved = useRef(false);
+  const dragRef = useRef<number | null>(null);
   const correct = step.items.map((item) => item.id);
   function move(from: number, to: number) {
-    if (to < 0 || to >= order.length) return;
-    const next = [...order];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    setOrder(next);
+    setOrder((current) => {
+      if (from === to || to < 0 || to >= current.length) return current;
+      const next = [...current];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
   }
   function check() {
     order.forEach((id, index) => onMark(id, id === correct[index]));
     onReveal(step.why, step.source, order.every((id, index) => id === correct[index]));
   }
+  function placeAt(clientY: number) {
+    const rows = [...(list.current?.querySelectorAll("li") ?? [])];
+    let to = 0;
+    rows.forEach((row, index) => {
+      const box = row.getBoundingClientRect();
+      if (clientY > box.top + box.height / 2) to = index;
+    });
+    return to;
+  }
   return (
     <>
-      <ol className="stack">
+      <ol className="stack" ref={list}>
         {order.map((id, index) => {
           const item = step.items.find((entry) => entry.id === id)!;
           return (
             <li
               key={id}
-              draggable
-              onDragStart={() => setDrag(index)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => {
-                if (drag !== null) move(drag, index);
+              className={drag === index || picked === index ? "lift" : ""}
+              onPointerDown={(event) => {
+                if ((event.target as HTMLElement).closest("button")) return;
+                moved.current = false;
+                dragRef.current = index;
+                setDrag(index);
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => {
+                const from = dragRef.current;
+                if (from === null || from !== index) return;
+                if (Math.abs(event.movementY) > 2) moved.current = true;
+                const to = placeAt(event.clientY);
+                if (to !== from) {
+                  move(from, to);
+                  dragRef.current = to;
+                  setDrag(to);
+                }
+              }}
+              onPointerUp={() => {
+                if (!moved.current && dragRef.current === index) {
+                  if (picked === null) setPicked(index);
+                  else {
+                    move(picked, index);
+                    setPicked(null);
+                  }
+                }
+                dragRef.current = null;
                 setDrag(null);
               }}
             >
-              <span>{index + 1}</span>
+              <span className="slot">{index + 1}</span>
+              <span className="ico" aria-hidden="true">{iconFor(item.label)}</span>
               <b>{item.label}</b>
               <span className="mini">
                 <button aria-label={`Move ${item.label} up`} onClick={() => move(index, index - 1)}>
-                  Up
+                  ▲
                 </button>
                 <button aria-label={`Move ${item.label} down`} onClick={() => move(index, index + 1)}>
-                  Down
+                  ▼
                 </button>
               </span>
             </li>
@@ -276,32 +342,62 @@ function OrderPlay({
 
 function ChoicePlay({
   step,
+  preview,
   onMark,
   onReveal,
 }: {
   step: ChoiceStep;
+  preview?: boolean;
   onMark: (ok: boolean) => void;
   onReveal: (why: string, source: string) => void;
 }) {
   const [options] = useState(() => shuffle(step.options));
   const [picked, setPicked] = useState("");
+  const [hover, setHover] = useState("");
+  const shown = options.find((option) => option.id === (picked || hover));
+  const [followers, setFollowers] = useState(1200);
+  useEffect(() => {
+    if (!preview || !picked) return;
+    const target = picked === step.answer ? 1480 : 1224;
+    const timer = window.setInterval(() => {
+      setFollowers((value) => (value >= target ? target : value + Math.ceil((target - value) / 6)));
+    }, 40);
+    return () => window.clearInterval(timer);
+  }, [picked, preview, step.answer]);
+  const live = picked ? (picked === step.answer ? 100 : 22) : hover === step.answer ? 78 : hover ? 30 : 12;
   return (
-    <div className="choices">
-      {options.map((option) => (
-        <button
-          key={option.id}
-          className={picked && option.id === step.answer ? "good" : picked === option.id ? "bad" : ""}
-          disabled={!!picked}
-          onClick={() => {
-            setPicked(option.id);
-            onMark(option.id === step.answer);
-            onReveal(step.why, step.source);
-          }}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+    <>
+      {preview && (
+        <article className="post-card">
+          <small>Post preview</small>
+          <b>{shown?.label ?? "Hover a line to see the post"}</b>
+          <span>Followers {followers.toLocaleString("en-US")}</span>
+          <span className="gauge big" aria-label="Live citation meter">
+            <i style={{ width: `${live}%` }} />
+            <em>Citations {live}</em>
+          </span>
+        </article>
+      )}
+      <div className="choices">
+        {options.map((option) => (
+          <button
+            key={option.id}
+            className={`tile ${picked && option.id === step.answer ? "good" : picked === option.id ? "bad" : ""}`}
+            disabled={!!picked}
+            onPointerEnter={() => setHover(option.id)}
+            onPointerLeave={() => setHover("")}
+            onClick={() => {
+              setPicked(option.id);
+              onMark(option.id === step.answer);
+              onReveal(step.why, step.source);
+            }}
+          >
+            <span className="ico" aria-hidden="true">{iconFor(option.label)}</span>
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -321,6 +417,8 @@ function AssignPlay({
   const [selected, setSelected] = useState("");
   const [cursor, setCursor] = useState(-1);
   const [jam, setJam] = useState("");
+  const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
+  const dragging = useRef("");
   function lift(taskId: string) {
     setPlaced((prev) => {
       const next = { ...prev };
@@ -355,60 +453,99 @@ function AssignPlay({
     }
     onReveal("The chain ran clean.", step.tasks[0].source, true);
   }
+  const tokenAt = cursor < 0 ? 0 : Math.max(0, step.agents.findIndex((agent) => agent.id === step.tasks[cursor]?.agent));
+  const jammed = step.tasks.find((task) => task.id === jam);
   return (
     <>
       <div className="desk">
-        {step.agents.map((agent) => (
-          <div
-            key={agent.id}
-            role="button"
-            tabIndex={0}
-            aria-label={`Desk ${agent.label}`}
-            className={`agent ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""}`}
-            style={{ background: color }}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              drop(agent.id, event.dataTransfer.getData("text/plain"));
-            }}
-            onClick={() => drop(agent.id)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") drop(agent.id);
-            }}
-          >
-            <b>{agent.label}</b>
-            <small>{agent.note}</small>
-            {step.tasks
-              .filter((task) => placed[task.id] === agent.id)
-              .map((task) => (
-                <button
-                  key={task.id}
-                  className={jam === task.id ? "chip smoke" : "chip"}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    lift(task.id);
-                  }}
-                >
-                  {task.label}
-                </button>
-              ))}
+        {step.agents.map((agent, index) => (
+          <div key={agent.id} className="seat">
+            {index > 0 && <span className="arrow" aria-hidden="true">→</span>}
+            <div
+              role="button"
+              tabIndex={0}
+              data-agent={agent.id}
+              aria-label={`Desk ${agent.label}`}
+              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""}`}
+              style={{ ["--seat" as string]: color }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                drop(agent.id, event.dataTransfer.getData("text/plain") || dragging.current);
+              }}
+              onClick={() => drop(agent.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") drop(agent.id);
+              }}
+            >
+              <span className="bot" aria-hidden="true">
+                {agent.id === "you" ? "🙂" : agent.id === "buyer" || agent.id === "analyst" ? "📦" : "🤖"}
+              </span>
+              <b>{agent.label}</b>
+              <small>{agent.note}</small>
+              {step.tasks
+                .filter((task) => placed[task.id] === agent.id)
+                .map((task) => (
+                  <button
+                    key={task.id}
+                    className={jam === task.id ? "chip smoke" : "chip"}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      lift(task.id);
+                    }}
+                  >
+                    {task.label}
+                  </button>
+                ))}
+              {jam && placed[jam] === agent.id && jammed && <span className="puff">{jammed.why}</span>}
+            </div>
           </div>
         ))}
       </div>
+      <div className="conveyor" aria-hidden="true">
+        <span className="token" style={{ left: `${(tokenAt / Math.max(1, step.agents.length - 1)) * 86}%` }} />
+      </div>
       <div className="tasks">
-        {tasks.map((task) => (
+        {tasks.filter((task) => !placed[task.id]).map((task) => (
           <button
             key={task.id}
             draggable={!placed[task.id]}
             disabled={!!placed[task.id]}
             aria-pressed={selected === task.id}
-            className={selected === task.id ? "picked" : ""}
-            onDragStart={(event) => event.dataTransfer.setData("text/plain", task.id)}
+            className={selected === task.id ? "picked tile" : "tile"}
+            onDragStart={(event) => {
+              dragging.current = task.id;
+              event.dataTransfer.setData("text/plain", task.id);
+            }}
+            onPointerDown={(event) => {
+              if (placed[task.id]) return;
+              dragging.current = task.id;
+              setSelected(task.id);
+              setGhost({ id: task.id, x: event.clientX, y: event.clientY });
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (dragging.current !== task.id) return;
+              setGhost({ id: task.id, x: event.clientX, y: event.clientY });
+            }}
+            onPointerUp={(event) => {
+              const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-agent]");
+              const agentId = hit?.getAttribute("data-agent");
+              if (agentId) drop(agentId, task.id);
+              dragging.current = "";
+              setGhost(null);
+            }}
             onClick={() => setSelected(task.id)}
           >
+            <span className="ico" aria-hidden="true">{iconFor(task.label)}</span>
             {task.label}
           </button>
         ))}
       </div>
+      {ghost && (
+        <div className="ghost-tile" style={{ left: ghost.x, top: ghost.y }}>
+          {tasks.find((task) => task.id === ghost.id)?.label}
+        </div>
+      )}
       <button className="go" onClick={() => void run()} disabled={Object.keys(placed).length < step.tasks.length}>
         Run
       </button>
@@ -439,11 +576,12 @@ function PokerPlay({
   }
   return (
     <>
+      <div className="felt">
       <div className="cards">
         {cards.map((card) => (
-          <article key={card.id}>
+          <article key={card.id} className={calls[card.id] === true ? "held" : calls[card.id] === false ? "folded" : ""}>
             <p>{card.text}</p>
-            <div>
+            <div className="chips">
               <button
                 aria-pressed={calls[card.id] === true}
                 aria-label={`Hold. ${card.text}`}
@@ -461,6 +599,7 @@ function PokerPlay({
             </div>
           </article>
         ))}
+      </div>
       </div>
       <button className="go" onClick={show}>
         Show the hand

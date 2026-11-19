@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { PlayView } from "./PlayView";
-import { Creator, RegionPath, WorldMap, Admin, levelFrom, regionFrom, useRoute } from "./screens";
+import { Creator, RegionPath, WorldMap, Admin, SpriteSheet, levelFrom, regionFrom, useRoute } from "./screens";
 import { useGame, StoreProvider } from "./store";
 import { levelKey } from "./storage";
 import "./styles.css";
@@ -20,6 +20,7 @@ function Shell() {
     else if (region && level && !unlocked) go(`/region/${region.id}`);
   }, [path, region, level, unlocked, go]);
   if (path === "/admin") return <Admin />;
+  if (path === "/sprites") return <SpriteSheet />;
   if (!game.save.character || path === "/edit") {
     return (
       <Creator
