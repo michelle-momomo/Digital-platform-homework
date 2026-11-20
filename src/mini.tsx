@@ -5,6 +5,7 @@ import { gradedCount } from "./content";
 import { rate, starLines } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
+import { TimeBonus } from "./timebar";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -70,6 +71,7 @@ function Shell({
   how: string;
   children: ReactNode;
 }) {
+  const started = useRef(Date.now());
   return (
     <main className={`sheet theme-${region.id} swipe-play`}>
       <header className="hud">
@@ -81,6 +83,7 @@ function Shell({
             <i key={item.id} className={i === index ? "now" : i < index ? "done" : ""} />
           ))}
         </span>
+        <TimeBonus limitMs={level.limitMs} started={started.current} />
       </header>
       <section className="swipe-stage">
         <p className="swipe-hint">{how}</p>

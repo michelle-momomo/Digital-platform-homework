@@ -6,6 +6,7 @@ import { gradedCount } from "./content";
 import { rate, starLines, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
+import { TimeBonus } from "./timebar";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -45,7 +46,6 @@ function LegacyPlay({
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
   const [mood, setMood] = useState<"idle" | "happy" | "sad">("idle");
-  const [left, setLeft] = useState(Math.round(level.limitMs / 1000));
   const game = useGame();
   const seen = useRef(new Map<string, boolean>());
   const correct = useRef(0);
@@ -54,13 +54,6 @@ function LegacyPlay({
   const started = useRef(Date.now());
   const step = level.steps[stepIndex];
   const total = gradedCount(level);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setLeft((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   function mark(key: string, ok: boolean) {
     seen.current.set(key, ok);
@@ -131,9 +124,7 @@ function LegacyPlay({
         <b className="combo" key={combo.current}>
           Combo {combo.current}
         </b>
-        <span className="timebar" aria-label={left > 0 ? `Bonus ${left}s` : "Bonus over"}>
-          <i style={{ width: `${(left / Math.max(1, Math.round(level.limitMs / 1000))) * 100}%` }} />
-        </span>
+        <TimeBonus limitMs={level.limitMs} started={started.current} />
         <button className="ghost tiny" aria-pressed={muted} onClick={() => game.setMute(!game.save.mute)}>
           {muted ? "Muted" : "Sound"}
         </button>
@@ -735,6 +726,7 @@ function SimpleLevel({
           ))}
         </span>
         <b className="combo">Combo {ok ? 1 : 0}</b>
+        <TimeBonus limitMs={level.limitMs} started={started.current} />
       </header>
       <section className="play-scene">
         <p className="tap-label">Tap the right answer</p>

@@ -274,6 +274,13 @@ input, select {
 .actor { position: relative; z-index: 3; width: 180px; flex: none; }
 .actor .sprite { width: 168px; }
 .sweat { position: absolute; right: 0; top: 0; color: #6eb7e8; font-weight: 800; font-size: 22px; }
+.timebonus { position: relative; display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 12px; }
+.timebonus small { color: #8a7896; }
+.timebonus.urgent .timebar i { background: #e07a6a; }
+.timebonus.urgent b { animation: blink 0.6s steps(1) infinite; }
+.timebonus.over .timebar i { width: 0; }
+@keyframes blink { 50% { opacity: 0.2; } }
+.time-tip { position: absolute; top: 28px; right: 0; z-index: 6; width: 180px; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 8px 0 #f6e3ea; padding: 8px; text-align: left; }
 .timebar { flex: 1; max-width: 180px; height: 14px; background: #fff; border-radius: 99px; overflow: hidden; box-shadow: inset 0 0 0 2px #f6e3ea; }
 .timebar i { display: block; height: 100%; background: linear-gradient(90deg, #fff3b0, #f8c8dc); }
 .gauge { position: relative; width: 100%; height: 22px; border-radius: 99px; background: #d9c7ea; overflow: hidden; box-shadow: inset 0 0 0 2px #fff; }
