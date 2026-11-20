@@ -144,7 +144,12 @@
 .job.dragging{opacity:.45}
 .ghost-chip{position:fixed;z-index:30;transform:translate(-40%,-50%);pointer-events:none;padding:var(--s-8) var(--s-12);border-radius:12px;background:var(--surface);border:2px solid var(--pink);box-shadow:var(--lift);font-weight:700;font-size:var(--fs-13)}
 @media (max-width:480px){
-  .slots{grid-template-columns:1fr 1fr}
+  .assign{gap:var(--s-16)}
+  .slots{grid-template-columns:1fr 1fr;gap:var(--s-8)}
+  .slot .nm{padding:var(--s-8) var(--s-12)}
+  .drop{min-height:44px}
+  .jobs{gap:var(--s-8)}
+  .job{min-height:48px;padding:var(--s-8) var(--s-12)}
 }
 
 /* the level shell is full-bleed: no page padding around it */

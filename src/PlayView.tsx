@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MiniLevel } from "./mini";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region } from "./content";
 import { gradedCount } from "./content";
@@ -352,7 +352,7 @@ function OrderPlay({
   }
   const checkRef = useRef(check);
   checkRef.current = check;
-  useEffect(() => {
+  useLayoutEffect(() => {
     bind(solved ? undefined : { label: "Check order", onClick: () => checkRef.current() });
   }, [bind, solved]);
 
@@ -513,7 +513,7 @@ function AssignPlay({
   const runRef = useRef(run);
   runRef.current = run;
   const full = Object.keys(placed).length === step.tasks.length;
-  useEffect(() => {
+  useLayoutEffect(() => {
     bind(cleared ? undefined : { label: "Run", disabled: !full || running, onClick: () => void runRef.current() });
   }, [bind, cleared, full, running]);
 
@@ -650,7 +650,7 @@ function PokerPlay({
   const showRef = useRef(show);
   showRef.current = show;
   const all = cards.every((card) => calls[card.id] !== undefined);
-  useEffect(() => {
+  useLayoutEffect(() => {
     bind({ label: "Show the hand", disabled: !all, onClick: () => showRef.current() });
   }, [bind, all]);
   return (

@@ -87,9 +87,8 @@ input, select { width: 100%; margin-top: var(--s-4); padding: var(--s-12); borde
 .swatches { display: flex; gap: var(--s-8); flex-wrap: wrap; justify-content: center; }
 .swatch { width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); }
 .swatch.on { box-shadow: 0 0 0 3px var(--ink); }
-.creator-actions { display: grid; justify-items: center; gap: var(--s-8); margin-top: var(--s-24); }
+.creator-actions { position: sticky; bottom: var(--s-16); z-index: 5; display: grid; justify-items: center; gap: var(--s-4); margin-top: var(--s-24); padding: var(--s-12) var(--s-16) var(--s-4); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--lift); }
 .action-row { display: flex; flex-wrap: wrap; gap: var(--s-12); justify-content: center; align-items: center; }
-.primary-wrap { display: inline-block; }
 .name-hint { font-size: var(--fs-13); font-weight: 700; color: var(--muted); }
 .shake-input { animation: nameshake .3s linear; }
 @keyframes nameshake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
@@ -101,7 +100,7 @@ input, select { width: 100%; margin-top: var(--s-4); padding: var(--s-12); borde
 .who { display: flex; gap: var(--s-12); align-items: center; padding: var(--s-8) var(--s-16); }
 .who b, .who span { display: block; }
 .who .btn-text { height: 32px; padding: 0; }
-.map-wrap { position: relative; height: calc(100vh - 148px); min-height: 760px; margin-top: var(--s-8); }
+.map-wrap { position: relative; height: calc(100vh - 148px); min-height: 600px; margin-top: var(--s-8); }
 .map-art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: var(--r-card); }
 .isle { position: absolute; width: 33%; transform: translate(-50%, -28%); }
 .isle.locked { width: 16%; filter: grayscale(.35); }
@@ -203,6 +202,10 @@ input, select { width: 100%; margin-top: var(--s-4); padding: var(--s-12); borde
   .how b { font-size: var(--fs-13); }
   .cover-sub { font-size: var(--fs-13); }
   .creator-card { padding: var(--s-16); }
+  .creator-actions { padding-left: var(--s-8); padding-right: var(--s-8); }
+  .action-row { flex-wrap: nowrap; gap: var(--s-8); }
+  .action-row .btn { padding: 0 var(--s-16); }
+  .action-row .btn-primary { font-size: var(--fs-15); }
   .path { padding: var(--s-16); }
 }
 

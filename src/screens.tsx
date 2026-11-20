@@ -153,11 +153,18 @@ export function Creator({
               <button className="btn btn-secondary" type="button" onClick={randomize}>
                 Randomize
               </button>
-              <span className="primary-wrap" onClick={pokeDisabled}>
-                <button className="btn btn-primary" type="submit" disabled={!ready}>
-                  Start adventure
-                </button>
-              </span>
+              <button
+                className="btn btn-primary"
+                type="submit"
+                aria-disabled={!ready}
+                onClick={(event) => {
+                  if (ready) return;
+                  event.preventDefault();
+                  pokeDisabled();
+                }}
+              >
+                Start adventure
+              </button>
             </div>
             {!ready && <p className="name-hint">Give your pal a name first</p>}
             {onCancel && (
