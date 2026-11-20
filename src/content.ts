@@ -13,6 +13,40 @@ export type ChoiceStep = {
   why: string;
   source: string;
 };
+export type SwipeCard = {
+  id: string;
+  text: string;
+  truth: boolean;
+  why: string;
+  source: string;
+};
+export type SwipeStep = {
+  kind: "swipe";
+  cards: SwipeCard[];
+};
+export type MatchStep = {
+  kind: "match";
+  how: string;
+  pairs: { id: string; left: string; right: string; why: string; source: string }[];
+};
+export type MemoryStep = {
+  kind: "memory";
+  how: string;
+  pairs: { id: string; a: string; b: string; why: string; source: string }[];
+};
+export type SortStep = {
+  kind: "sort";
+  how: string;
+  left: string;
+  right: string;
+  cards: { id: string; text: string; basket: "left" | "right"; why: string; source: string }[];
+};
+export type ChatStep = {
+  kind: "chat";
+  how: string;
+  says: string;
+  replies: { id: string; text: string; ok: boolean; why: string; source: string }[];
+};
 export type AssignStep = {
   kind: "assign";
   prompt: string;
@@ -24,11 +58,12 @@ export type PokerStep = {
   prompt: string;
   cards: { id: string; text: string; hold: boolean; why: string; source: string }[];
 };
-export type Step = OrderStep | ChoiceStep | AssignStep | PokerStep;
+export type Step = OrderStep | ChoiceStep | AssignStep | PokerStep | SwipeStep | MatchStep | MemoryStep | SortStep | ChatStep;
 export type Level = {
   id: string;
   title: string;
   sticker: string;
+  learn?: { icon: string; points: string[]; source: string };
   limitMs: number;
   steps: Step[];
 };
@@ -263,36 +298,27 @@ export const regions: Region[] = [
     x: 50,
     y: 22,
     landmark: "robot",
-    flavor: (n) => `Desks open ${Math.min(6, n + 1)}`,
+    flavor: (n) => `Chain ${n}/6`,
     levels: [
       {
         id: "writer",
         title: "Hire the Brief Writer",
         sticker: "The brief is drafted before anyone else touches it.",
+        learn: {
+          icon: "✎",
+          source: "Nick Goh deck pp. 4, 6",
+          points: ["Brief Writer drafts the brief", "Include goal, audience, budget, timing", "The buyer only negotiates placements"],
+        },
         limitMs: 40000,
         steps: [
           {
-            kind: "assign",
-            prompt: "You are a one-person shop. Staff the first desk.",
-            agents: [
-              { id: "writer", label: "Brief Writer", note: "Drafts the brief" },
-              { id: "buyer", label: "The Buyer", note: "Not on this chain" },
-            ],
-            tasks: [
-              {
-                id: "draft",
-                label: "Draft the brief from the project",
-                agent: "writer",
-                why: "The Brief Writer drafts the brief. The buyer only negotiates placements.",
-                source: "Nick Goh deck pp. 4, 6",
-              },
-              {
-                id: "needs",
-                label: "Capture goal, audience, budget, and timing",
-                agent: "writer",
-                why: "Those are the inputs the Brief Writer needs.",
-                source: "Nick Goh deck p. 4",
-              },
+            kind: "swipe",
+            cards: [
+              { id: "draft", text: "The Brief Writer drafts the brief.", truth: true, why: "The Brief Writer drafts the brief. The buyer only negotiates placements.", source: "Nick Goh deck pp. 4, 6" },
+              { id: "buyer-drafts", text: "The buyer drafts the brief.", truth: false, why: "The buyer only negotiates placements.", source: "Nick Goh deck pp. 4, 6" },
+              { id: "needs", text: "The brief needs the goal, audience, budget, and timing.", truth: true, why: "Those are the inputs the Brief Writer needs.", source: "Nick Goh deck p. 4" },
+              { id: "buyer-seat", text: "The buyer is a seat in this handoff.", truth: false, why: "The buyer only negotiates placements. That role is not one of the six seats.", source: "Nick Goh deck pp. 4, 6" },
+              { id: "buyer-job", text: "The buyer negotiates placements.", truth: true, why: "The buyer only negotiates placements.", source: "Nick Goh deck pp. 4, 6" },
             ],
           },
         ],
@@ -301,31 +327,20 @@ export const regions: Region[] = [
         id: "validator",
         title: "Fresh eyes",
         sticker: "A new chat checks the brief.",
+        learn: {
+          icon: "👀",
+          source: "Nick Goh deck pp. 4, 6",
+          points: ["Validator is a fresh chat", "Checks objective, audience, message, metric", "The Analyst is not on this chain"],
+        },
         limitMs: 45000,
         steps: [
           {
-            kind: "assign",
-            prompt: "The draft is messy. Hire a critic.",
-            agents: [
-              { id: "writer", label: "Brief Writer", note: "Already hired" },
-              { id: "validator", label: "Brief Validator", note: "Fresh chat" },
-              { id: "analyst", label: "The Analyst", note: "Not on this chain" },
-            ],
-            tasks: [
-              {
-                id: "fresh",
-                label: "Critique the brief in a fresh chat",
-                agent: "validator",
-                why: "The validator is a new chat with fresh eyes.",
-                source: "Nick Goh deck pp. 4, 6",
-              },
-              {
-                id: "checks",
-                label: "Check objective, audience, message, and metric",
-                agent: "validator",
-                why: "That checklist is the validator’s job.",
-                source: "Nick Goh deck p. 4",
-              },
+            kind: "match",
+            how: "Tap one on the left, then its match.",
+            pairs: [
+              { id: "fresh", left: "Brief Validator", right: "A fresh chat", why: "The validator is a new chat with fresh eyes.", source: "Nick Goh deck pp. 4, 6" },
+              { id: "checks", left: "The checklist", right: "Objective, audience, message, metric", why: "That checklist is the validator’s job.", source: "Nick Goh deck p. 4" },
+              { id: "analyst", left: "The Analyst", right: "Not on this chain", why: "That checklist is the validator’s job.", source: "Nick Goh deck p. 4" },
             ],
           },
         ],
@@ -334,24 +349,19 @@ export const regions: Region[] = [
         id: "strategist",
         title: "The Big Idea",
         sticker: "Strategy starts after the brief is valid.",
+        learn: {
+          icon: "✦",
+          source: "Nick Goh deck pp. 4, 6",
+          points: ["Strategist digests the valid brief", "Then writes the Big Idea"],
+        },
         limitMs: 40000,
         steps: [
           {
-            kind: "assign",
-            prompt: "The brief survived the check. Shape the idea.",
-            agents: [
-              { id: "validator", label: "Brief Validator", note: "Already hired" },
-              { id: "strategist", label: "Strategist", note: "Big Idea" },
-              { id: "buyer", label: "The Buyer", note: "Not on this chain" },
-            ],
-            tasks: [
-              {
-                id: "idea",
-                label: "Turn the valid brief into a Big Idea",
-                agent: "strategist",
-                why: "The strategist digests the valid brief and writes the Big Idea.",
-                source: "Nick Goh deck pp. 4, 6",
-              },
+            kind: "memory",
+            how: "Flip two cards that go together.",
+            pairs: [
+              { id: "role", a: "Strategist", b: "Writes the Big Idea", why: "The strategist digests the valid brief and writes the Big Idea.", source: "Nick Goh deck pp. 4, 6" },
+              { id: "order", a: "Valid brief", b: "Comes before the idea", why: "The strategist digests the valid brief and writes the Big Idea.", source: "Nick Goh deck pp. 4, 6" },
             ],
           },
         ],
@@ -360,24 +370,23 @@ export const regions: Region[] = [
         id: "you",
         title: "You approve",
         sticker: "A person saves the brief before production.",
+        learn: {
+          icon: "✓",
+          source: "Nick Goh deck p. 6",
+          points: ["Seat four is you", "AI can draft. You decide.", "You save it to the knowledge base"],
+        },
         limitMs: 35000,
         steps: [
           {
-            kind: "assign",
-            prompt: "Nothing is produced until a human says yes.",
-            agents: [
-              { id: "strategist", label: "Strategist", note: "Already hired" },
-              { id: "you", label: "You", note: "Human checkpoint" },
-              { id: "buyer", label: "The Buyer", note: "Not on this chain" },
-            ],
-            tasks: [
-              {
-                id: "save",
-                label: "Approve it and save it to the knowledge base",
-                agent: "you",
-                why: "Seat four is you. AI can draft. You decide.",
-                source: "Nick Goh deck p. 6",
-              },
+            kind: "sort",
+            how: "Tap the basket this card belongs in.",
+            left: "AI does it",
+            right: "You do it",
+            cards: [
+              { id: "draft", text: "Draft the brief", basket: "left", why: "AI can draft. You decide.", source: "Nick Goh deck p. 6" },
+              { id: "approve", text: "Approve the brief", basket: "right", why: "Seat four is you. AI can draft. You decide.", source: "Nick Goh deck p. 6" },
+              { id: "save", text: "Save it to the knowledge base", basket: "right", why: "You approve it and save it to the knowledge base.", source: "Nick Goh deck p. 6" },
+              { id: "decide", text: "Decide", basket: "right", why: "AI can draft. You decide.", source: "Nick Goh deck p. 6" },
             ],
           },
         ],
@@ -386,24 +395,21 @@ export const regions: Region[] = [
         id: "makers",
         title: "Production desk",
         sticker: "Visuals and channel lines come after your yes.",
+        learn: {
+          icon: "✿",
+          source: "Nick Goh deck pp. 5, 6",
+          points: ["Design makes the visuals", "Copy adapts the lines per channel", "They work after your yes"],
+        },
         limitMs: 40000,
         steps: [
           {
-            kind: "assign",
-            prompt: "The brief is saved. Make the work.",
-            agents: [
-              { id: "you", label: "You", note: "Already approved" },
-              { id: "makers", label: "Designer + Copywriter", note: "KVs and lines" },
-              { id: "analyst", label: "The Analyst", note: "Not on this chain" },
-            ],
-            tasks: [
-              {
-                id: "kv",
-                label: "Key visuals via Higgsfield, plus channel copy",
-                agent: "makers",
-                why: "Design makes the visuals. Copy adapts the lines per channel.",
-                source: "Nick Goh deck pp. 5, 6",
-              },
+            kind: "chat",
+            how: "Tap the reply that fits.",
+            says: "The brief is saved. Who makes the work?",
+            replies: [
+              { id: "makers", text: "Designer and copywriter", ok: true, why: "Design makes the visuals. Copy adapts the lines per channel.", source: "Nick Goh deck pp. 5, 6" },
+              { id: "analyst", text: "The Analyst", ok: false, why: "Design makes the visuals. The Analyst is not on this chain.", source: "Nick Goh deck pp. 5, 6" },
+              { id: "buyer", text: "The buyer", ok: false, why: "Designer and copywriter make the work after your yes.", source: "Nick Goh deck pp. 5, 6" },
             ],
           },
         ],
@@ -412,63 +418,21 @@ export const regions: Region[] = [
         id: "boss",
         title: "The big client",
         sticker: "Six seats. One chain. You are seat four.",
+        learn: {
+          icon: "★",
+          source: "Nick Goh deck pp. 5, 6",
+          points: ["Brief Writer drafts first", "You approve before production", "Reviewer signs off brand voice"],
+        },
         limitMs: 80000,
         steps: [
           {
-            kind: "assign",
-            prompt: "Boss client. Staff every seat, then run the chain.",
-            agents: [
-              { id: "writer", label: "Brief Writer", note: "Draft" },
-              { id: "validator", label: "Brief Validator", note: "Fresh chat" },
-              { id: "strategist", label: "Strategist", note: "Big Idea" },
-              { id: "you", label: "You", note: "Approve" },
-              { id: "makers", label: "Designer + Copywriter", note: "Make" },
-              { id: "reviewer", label: "Reviewer", note: "Sign off" },
-              { id: "buyer", label: "The Buyer", note: "Decoy" },
-            ],
-            tasks: [
-              {
-                id: "draft",
-                label: "Draft the brief",
-                agent: "writer",
-                why: "Brief Writer drafts. The buyer is not in this chain.",
-                source: "Nick Goh deck p. 6",
-              },
-              {
-                id: "check",
-                label: "Fresh-chat critique",
-                agent: "validator",
-                why: "Validator checks the brief in a new chat.",
-                source: "Nick Goh deck p. 6",
-              },
-              {
-                id: "idea",
-                label: "Shape the Big Idea",
-                agent: "strategist",
-                why: "Strategist turns the valid brief into the Big Idea.",
-                source: "Nick Goh deck p. 6",
-              },
-              {
-                id: "save",
-                label: "Approve and save",
-                agent: "you",
-                why: "You approve before anyone produces the work.",
-                source: "Nick Goh deck p. 6",
-              },
-              {
-                id: "make",
-                label: "Visuals and channel lines",
-                agent: "makers",
-                why: "Designer and copywriter make the work after your yes.",
-                source: "Nick Goh deck pp. 5, 6",
-              },
-              {
-                id: "sign",
-                label: "Brand voice and sign-off",
-                agent: "reviewer",
-                why: "The reviewer checks brand voice and signs off.",
-                source: "Nick Goh deck pp. 5, 6",
-              },
+            kind: "swipe",
+            cards: [
+              { id: "draft", text: "The Brief Writer drafts the brief.", truth: true, why: "Brief Writer drafts. The buyer is not in this chain.", source: "Nick Goh deck p. 6" },
+              { id: "buyer", text: "The buyer is in this chain.", truth: false, why: "The buyer is not in this chain.", source: "Nick Goh deck p. 6" },
+              { id: "check", text: "The validator checks the brief in a new chat.", truth: true, why: "Validator checks the brief in a new chat.", source: "Nick Goh deck p. 6" },
+              { id: "you", text: "You approve before anyone produces the work.", truth: true, why: "You approve before anyone produces the work.", source: "Nick Goh deck p. 6" },
+              { id: "sign", text: "The reviewer checks brand voice and signs off.", truth: true, why: "The reviewer checks brand voice and signs off.", source: "Nick Goh deck pp. 5, 6" },
             ],
           },
         ],
@@ -700,6 +664,10 @@ export function gradedCount(level: Level) {
     if (step.kind === "order") return n + step.items.length;
     if (step.kind === "choice") return n + 1;
     if (step.kind === "assign") return n + step.tasks.length;
+    if (step.kind === "swipe") return n + step.cards.length;
+    if (step.kind === "match" || step.kind === "memory") return n + step.pairs.length;
+    if (step.kind === "sort") return n + step.cards.length;
+    if (step.kind === "chat") return n + 1;
     return n + step.cards.length;
   }, 0);
 }

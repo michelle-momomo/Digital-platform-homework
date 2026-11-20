@@ -41,6 +41,17 @@ test("create a pal, walk the map, and clear the first level", async ({ page }) =
   ).toBe(true);
 });
 
+test("agentic levels teach, then play", async ({ page }) => {
+  await create(page, "Mina");
+  await page.goto("/region/agentic/level/writer");
+  await expect(page.getByRole("button", { name: "Start game" })).toBeVisible();
+  await expect(page.getByText("Brief Writer drafts the brief")).toBeVisible();
+  await page.getByRole("button", { name: "Start game" }).click();
+  await expect(page.getByText("Swipe right if true, left if false")).toBeVisible();
+  await page.getByRole("button", { name: "True", exact: true }).click();
+  await expect(page.getByRole("status")).toBeVisible();
+});
+
 test("a saved pal continues from the cover", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {

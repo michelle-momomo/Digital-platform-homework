@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sprite } from "./AvatarView";
+import { MiniLevel } from "./mini";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region, Step } from "./content";
 import { gradedCount } from "./content";
 import { rate, voiceRank } from "./logic";
@@ -104,6 +105,9 @@ function LegacyPlay({
   const meter = total === 0 ? 0 : Math.round((correct.current / total) * 100);
 
   const shownStars = Math.min(3, correct.current);
+  if (step.kind !== "order" && step.kind !== "choice" && step.kind !== "assign" && step.kind !== "poker") {
+    return null;
+  }
 
   return (
     <main className={`sheet theme-${region.id}`}>
@@ -625,6 +629,7 @@ export function PlayView(props: {
   onDone: (result: LevelResult) => void;
 }) {
   if (props.region.id === "vibe" && props.level.id === "pipeline") return <SimpleLevel {...props} />;
+  if (props.region.id === "agentic") return <MiniLevel {...props} />;
   return <LegacyPlay {...props} />;
 }
 
