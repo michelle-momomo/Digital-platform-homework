@@ -500,6 +500,27 @@ export function RegionPath({
   const [party, setParty] = useState(false);
   const cleared = game.cleared(region.id);
   const done = cleared === region.levels.length;
+  const trailRef = useRef<HTMLDivElement>(null);
+  const [pathPoints, setPathPoints] = useState("");
+  useEffect(() => {
+    const box = trailRef.current;
+    if (!box) return;
+    const measure = () => {
+      const base = box.getBoundingClientRect();
+      const spots = [...box.querySelectorAll<HTMLElement>(".node, .flag")];
+      setPathPoints(
+        spots
+          .map((spot) => {
+            const rect = spot.getBoundingClientRect();
+            return `${rect.left + rect.width / 2 - base.left},${rect.top + rect.height / 2 - base.top}`;
+          })
+          .join(" "),
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [region.id, cleared]);
   useEffect(() => {
     if (sessionStorage.getItem("party") === region.id) {
       setParty(true);
@@ -523,9 +544,9 @@ export function RegionPath({
           <ResultCard region={region} />
         </div>
       )}
-      <div className="trail">
-        <svg viewBox="0 0 360 520" className="trail-art" aria-hidden="true">
-          <path d="M70 40 C 70 100, 280 80, 280 150 S 70 220, 80 290 S 280 360, 270 450" fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinecap="round" />
+      <div className="trail" ref={trailRef}>
+        <svg className="trail-art" aria-hidden="true">
+          <polyline points={pathPoints} fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinejoin="round" strokeLinecap="round" />
         </svg>
         {region.levels.map((level, index) => {
           const result = game.save.levels[levelKey(region.id, level.id)];
@@ -535,11 +556,14 @@ export function RegionPath({
           return (
             <button
               key={level.id}
-              className="node"
+              className={`node ${unlocked ? "" : "locked"} ${result ? "cleared" : ""} ${index === cleared ? "current" : ""}`}
               style={{ left, top, background: NODE_COLORS[index % NODE_COLORS.length] }}
               disabled={!unlocked}
+              title={unlocked ? undefined : `先完成第 ${index} 关`}
               onClick={() => onPlay(level.id)}
             >
+              {!unlocked && <span className="lock">🔒</span>}
+              {result && <span className="tick">✓</span>}
               <span>{index + 1}</span>
               <b>{level.title}</b>
               <Stars n={result?.stars ?? 0} />
@@ -549,7 +573,7 @@ export function RegionPath({
             </button>
           );
         })}
-        <div className={`flag ${done ? "done" : ""}`}>{done ? "Cleared" : "Finish"}</div>
+        <div className={`flag ${done ? "done" : ""}`}>⚑ {done ? "Cleared" : "Finish"}</div>
       </div>
       <div className="stickers">
         {region.levels.map((level) =>

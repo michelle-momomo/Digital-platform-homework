@@ -131,14 +131,20 @@ input, select {
 }
 .stars i.on { background: #f2c14e; }
 .flag {
-  width: 120px;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 8px 0 #f6e3ea;
-  padding: 10px;
+  width: auto;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
   font-weight: 800;
+  color: #b3a8bc;
 }
-.flag.done { background: #b7e4c7; }
+.flag.done { background: transparent; color: #3d9b6e; }
+.node:disabled { filter: grayscale(0.8); opacity: 0.6; cursor: not-allowed; }
+.node .lock { position: absolute; top: 6px; right: 8px; }
+.node.current { animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.04); } }
+.trail-art { overflow: visible; }
 .stickers { display: flex; gap: 8px; flex-wrap: wrap; }
 .stickers span, .src {
   background: #fff3b0;
