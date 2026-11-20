@@ -37,7 +37,19 @@ export function Creator({
       : hairsFor(gender)[0].id;
     setDraft({ ...draft, gender, hair });
   }
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [nameShake, setNameShake] = useState(false);
   const ready = draft.name.trim().length > 0 && draft.name.trim().length <= 20;
+  function focusName() {
+    nameRef.current?.focus();
+    nameRef.current?.scrollIntoView({ block: "center" });
+  }
+  function pokeDisabled() {
+    if (ready) return;
+    focusName();
+    setNameShake(true);
+    window.setTimeout(() => setNameShake(false), 300);
+  }
   function randomize() {
     const gender: Gender = Math.random() < 0.5 ? "girl" : "boy";
     const options = hairsFor(gender);
@@ -59,7 +71,9 @@ export function Creator({
         <div className="pedestal">
           <span className="spark">✦</span>
           <Sprite character={draft} className="bounce big" label="Your avatar preview" />
-          <p>{draft.name.trim() || "Name me"}</p>
+          <button type="button" className="text-btn name-me" onClick={focusName}>
+            {draft.name.trim() || "Name me"}
+          </button>
         </div>
         <form
           onSubmit={(event) => {
@@ -116,8 +130,10 @@ export function Creator({
           <label>
             Name
             <input
+              ref={nameRef}
               required
               maxLength={20}
+              className={nameShake ? "shake-input" : ""}
               value={draft.name}
               placeholder="Your name"
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
@@ -132,12 +148,15 @@ export function Creator({
               onChange={(event) => setDraft({ ...draft, studentId: event.target.value })}
             />
           </label>
-          <div className="row center">
+          <div className="creator-actions">
+            <span className="primary-wrap" onClick={pokeDisabled}>
+              <button className="go big primary" type="submit" disabled={!ready}>
+                Start adventure
+              </button>
+            </span>
+            {!ready && <p className="name-hint">先给你的小人起个名字</p>}
             <button className="ghost" type="button" onClick={randomize}>
               Randomize
-            </button>
-            <button className="go big" type="submit" disabled={!ready}>
-              Start adventure
             </button>
             {onCancel && (
               <button className="text-btn" type="button" onClick={onCancel}>
@@ -188,8 +207,29 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
   const { character } = game.save;
   const [spot, setSpot] = useState(game.save.here);
   const [walking, setWalking] = useState(false);
+  const [guide, setGuide] = useState(false);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    try {
+      if (!localStorage.getItem("dp-map-guide")) setGuide(true);
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
+  function dismissGuide() {
+    setGuide(false);
+    try {
+      localStorage.setItem("dp-map-guide", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  }
   if (!character) return null;
   const here = regions.find((region) => region.id === spot) ?? playable[0];
+  const startHere = playable.find((item) => {
+    const done = item.levels.filter((level) => game.save.levels[levelKey(item.id, level.id)]).length;
+    return done < item.levels.length;
+  });
   function open(region: Region) {
     if (region.locked || walking) return;
     sfx("pop", game.save.mute);
@@ -228,7 +268,7 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
           {game.save.mute ? "Sound off" : "Sound on"}
         </button>
       </header>
-      <div className="map-wrap">
+      <div className="map-wrap" onClick={guide ? dismissGuide : undefined}>
         <MapArt />
         {regions.map((region) => {
           const stars = region.levels.reduce(
@@ -237,7 +277,17 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
           );
           return (
             <div key={region.id} className={`isle ${region.locked ? "locked" : ""}`} style={{ left: `${region.x}%`, top: `${region.y}%` }}>
-              <button className="isle-btn" disabled={region.locked} onClick={() => open(region)}>
+              <button
+                className="isle-btn"
+                disabled={region.locked}
+                aria-label={
+                  region.locked
+                    ? `${region.title}，即将开放`
+                    : `${region.title}，${region.when}，已获 ${stars}/${region.levels.length * 3} 星`
+                }
+                onClick={() => open(region)}
+              >
+                {guide && startHere?.id === region.id && <span className="map-guide">从这里开始！点击进入</span>}
                 <span className="banner">
                   <b>{region.title}</b>
                   <small>
@@ -412,7 +462,7 @@ function IslandArt({ region, stars }: { region: Region; stars: number }) {
       )}
       {!region.locked &&
         dots.map((dot, i) => (
-          <g key={i}>
+          <g key={i} pointerEvents="none" opacity="0.55">
             <circle cx={dot.x} cy={dot.y} r="11" fill={done[i] ? "#F2C14E" : "#fff"} stroke="#4A3B55" strokeWidth="1.6" />
             <text x={dot.x} y={dot.y + 3.5} textAnchor="middle" fontSize="11" fontWeight="800" fill="#4A3B55">
               {i + 1}
@@ -450,6 +500,27 @@ export function RegionPath({
   const [party, setParty] = useState(false);
   const cleared = game.cleared(region.id);
   const done = cleared === region.levels.length;
+  const trailRef = useRef<HTMLDivElement>(null);
+  const [pathPoints, setPathPoints] = useState("");
+  useEffect(() => {
+    const box = trailRef.current;
+    if (!box) return;
+    const measure = () => {
+      const base = box.getBoundingClientRect();
+      const spots = [...box.querySelectorAll<HTMLElement>(".node, .flag")];
+      setPathPoints(
+        spots
+          .map((spot) => {
+            const rect = spot.getBoundingClientRect();
+            return `${rect.left + rect.width / 2 - base.left},${rect.top + rect.height / 2 - base.top}`;
+          })
+          .join(" "),
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [region.id, cleared]);
   useEffect(() => {
     if (sessionStorage.getItem("party") === region.id) {
       setParty(true);
@@ -473,9 +544,9 @@ export function RegionPath({
           <ResultCard region={region} />
         </div>
       )}
-      <div className="trail">
-        <svg viewBox="0 0 360 520" className="trail-art" aria-hidden="true">
-          <path d="M70 40 C 70 100, 280 80, 280 150 S 70 220, 80 290 S 280 360, 270 450" fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinecap="round" />
+      <div className="trail" ref={trailRef}>
+        <svg className="trail-art" aria-hidden="true">
+          <polyline points={pathPoints} fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinejoin="round" strokeLinecap="round" />
         </svg>
         {region.levels.map((level, index) => {
           const result = game.save.levels[levelKey(region.id, level.id)];
@@ -485,11 +556,14 @@ export function RegionPath({
           return (
             <button
               key={level.id}
-              className="node"
+              className={`node ${unlocked ? "" : "locked"} ${result ? "cleared" : ""} ${index === cleared ? "current" : ""}`}
               style={{ left, top, background: NODE_COLORS[index % NODE_COLORS.length] }}
               disabled={!unlocked}
+              title={unlocked ? undefined : `先完成第 ${index} 关`}
               onClick={() => onPlay(level.id)}
             >
+              {!unlocked && <span className="lock">🔒</span>}
+              {result && <span className="tick">✓</span>}
               <span>{index + 1}</span>
               <b>{level.title}</b>
               <Stars n={result?.stars ?? 0} />
@@ -499,7 +573,7 @@ export function RegionPath({
             </button>
           );
         })}
-        <div className={`flag ${done ? "done" : ""}`}>{done ? "Cleared" : "Finish"}</div>
+        <div className={`flag ${done ? "done" : ""}`}>⚑ {done ? "Cleared" : "Finish"}</div>
       </div>
       <div className="stickers">
         {region.levels.map((level) =>

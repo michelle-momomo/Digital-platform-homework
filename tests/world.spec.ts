@@ -17,22 +17,6 @@ async function create(page: Page, name: string) {
   await page.getByRole("button", { name: "Start adventure" }).click();
 }
 
-async function sortPipeline(page: Page) {
-  const order = [
-    "Design the interface",
-    "Build the working site",
-    "Commit and push to GitHub",
-    "Deploy with Vercel",
-  ];
-  for (let to = 0; to < order.length; to++) {
-    let from = await page.locator(".stack b").allTextContents().then((items) => items.indexOf(order[to]));
-    while (from > to) {
-      await page.getByRole("button", { name: `Move ${order[to]} up`, exact: true }).click();
-      from--;
-    }
-  }
-}
-
 test("create a pal, walk the map, and clear the first level", async ({ page }) => {
   await create(page, "Mina");
   await expect(page.getByRole("heading", { name: "World map" })).toBeVisible();
@@ -44,17 +28,31 @@ test("create a pal, walk the map, and clear the first level", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Vibe Coding" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Who does this job/ })).toBeDisabled();
   await page.getByRole("button", { name: /Sketch, then ship/ }).click();
+  await expect(page.getByText("Tap the right answer")).toBeVisible();
   await expect(page.getByText("An idea wants to become a live site.")).toBeVisible();
-  await page.getByRole("button", { name: "Check order" }).click();
-  await sortPipeline(page);
-  await page.getByRole("button", { name: "Check order" }).click();
+  await page.getByRole("button", { name: "Host it before you design" }).click();
   await expect(page.getByText("Design the look, build it, push the code, then connect hosting.")).toBeVisible();
-  await page.getByRole("button", { name: "Finish" }).click();
-  await expect(page.getByRole("heading", { name: "Vibe Coding" })).toBeVisible();
-  await expect(page.locator(".stars .on").first()).toBeVisible();
+  await page.getByRole("button", { name: "Design, then build, push, and host" }).click();
+  await page.getByRole("button", { name: "下一关 →" }).click();
+  await expect(page.getByText("Drop each job on the tool that actually does it.")).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
+});
+
+test("agentic levels teach, then play", async ({ page }) => {
+  await create(page, "Mina");
+  await page.goto("/region/agentic/level/writer");
+  await expect(page.getByRole("button", { name: "Start game" })).toBeVisible();
+  await expect(page.getByText("Brief Writer drafts the brief")).toBeVisible();
+  await page.getByRole("button", { name: "Start game" }).click();
+  await expect(page.getByText("Swipe right if true, left if false")).toBeVisible();
+  await page.getByRole("button", { name: "True", exact: true }).click();
+  await expect(page.getByRole("status")).toBeVisible();
+  await page.goto("/region/linkedin/level/headline");
+  await expect(page.getByText("The heading should state the topic")).toBeVisible();
+  await page.getByRole("button", { name: "Start game" }).click();
+  await expect(page.getByText("Tap the reply that fits.")).toBeVisible();
 });
 
 test("a saved pal continues from the cover", async ({ page }) => {

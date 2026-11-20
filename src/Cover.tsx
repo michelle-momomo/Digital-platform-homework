@@ -65,6 +65,22 @@ export function Cover({
         <p className="cover-sub">
           An interactive review of the guest speaker sessions · MSc Marketing Management & Digital, ESSEC Asia-Pacific · Prof. Madina Kalyayeva’s Digital Platforms course · made by Sijie Du
         </p>
+        <div className="cover-actions">
+          {character ? (
+            <>
+              <button className="go big start-main" onClick={onContinue}>
+                Continue
+              </button>
+              <button className="text-btn" onClick={onNew}>
+                New character
+              </button>
+            </>
+          ) : (
+            <button className="go big start-main" onClick={onStart}>
+              Start
+            </button>
+          )}
+        </div>
         <ol className="how">
           <li>
             <span className="step-ico" aria-hidden="true">✿</span>
@@ -86,22 +102,6 @@ export function Cover({
           <span className="session lilac">Agentic AI · Nick Goh · 30 Oct</span>
           <span className="session baby">LinkedIn · Cindy Leong · 13 Nov</span>
           <span className="session mist">More islands coming soon</span>
-        </div>
-        <div className="cover-actions">
-          {character ? (
-            <>
-              <button className="go big" onClick={onContinue}>
-                Continue
-              </button>
-              <button className="ghost" onClick={onNew}>
-                New character
-              </button>
-            </>
-          ) : (
-            <button className="go big" onClick={onStart}>
-              Start
-            </button>
-          )}
         </div>
       </section>
     </main>

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Sprite } from "./AvatarView";
+import { MiniLevel } from "./mini";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region, Step } from "./content";
 import { gradedCount } from "./content";
-import { rate, voiceRank } from "./logic";
+import { rate, starLines, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
+import { TimeBonus } from "./timebar";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -23,7 +25,7 @@ function dealOrder(step: OrderStep) {
   return order;
 }
 
-export function PlayView({
+function LegacyPlay({
   region,
   level,
   index,
@@ -44,9 +46,8 @@ export function PlayView({
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
   const [mood, setMood] = useState<"idle" | "happy" | "sad">("idle");
-  const [left, setLeft] = useState(Math.round(level.limitMs / 1000));
   const game = useGame();
-  const seen = useRef(new Set<string>());
+  const seen = useRef(new Map<string, boolean>());
   const correct = useRef(0);
   const combo = useRef(0);
   const bestCombo = useRef(0);
@@ -54,18 +55,13 @@ export function PlayView({
   const step = level.steps[stepIndex];
   const total = gradedCount(level);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setLeft((value) => Math.max(0, value - 1));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   function mark(key: string, ok: boolean) {
-    if (seen.current.has(key)) return;
-    seen.current.add(key);
+    seen.current.set(key, ok);
+    correct.current = [...seen.current.values()].filter(Boolean).length;
+    setTick((value) => value + 1);
+  }
+  function grade(ok: boolean) {
     if (ok) {
-      correct.current += 1;
       combo.current += 1;
       bestCombo.current = Math.max(bestCombo.current, combo.current);
       sfx("ok", muted);
@@ -103,7 +99,11 @@ export function PlayView({
 
   const meter = total === 0 ? 0 : Math.round((correct.current / total) * 100);
 
-  const shownStars = Math.min(3, correct.current);
+  const shown = rate(correct.current, total, Date.now() - started.current, level.limitMs, bestCombo.current);
+  const shownStars = shown.stars;
+  if (step.kind !== "order" && step.kind !== "choice" && step.kind !== "assign" && step.kind !== "poker") {
+    return null;
+  }
 
   return (
     <main className={`sheet theme-${region.id}`}>
@@ -124,9 +124,7 @@ export function PlayView({
         <b className="combo" key={combo.current}>
           Combo {combo.current}
         </b>
-        <span className="timebar" aria-label={left > 0 ? `Bonus ${left}s` : "Bonus over"}>
-          <i style={{ width: `${(left / Math.max(1, Math.round(level.limitMs / 1000))) * 100}%` }} />
-        </span>
+        <TimeBonus limitMs={level.limitMs} started={started.current} />
         <button className="ghost tiny" aria-pressed={muted} onClick={() => game.setMute(!game.save.mute)}>
           {muted ? "Muted" : "Sound"}
         </button>
@@ -160,6 +158,7 @@ export function PlayView({
             setWhy(line);
             setSource(src);
             setReady(done);
+            grade(done);
           }}
         />
       )}
@@ -169,10 +168,11 @@ export function PlayView({
             preview={region.id === "linkedin"}
             step={step}
           onMark={(ok) => mark(`${stepIndex}:choice`, ok)}
-          onReveal={(line, src) => {
+          onReveal={(line, src, done) => {
             setWhy(line);
             setSource(src);
-            setReady(true);
+            setReady(done);
+            grade(done);
           }}
         />
       )}
@@ -186,6 +186,7 @@ export function PlayView({
             setWhy(line);
             setSource(src);
             setReady(done);
+            grade(done);
           }}
         />
       )}
@@ -198,17 +199,30 @@ export function PlayView({
             setWhy(line);
             setSource(src);
             setReady(done);
+            grade(done);
           }}
         />
       )}
       {why && (
-        <p className="reveal" role="status">
-          {why} <span className="src">{source}</span>
+        <p className={`result-bar ${ready ? "yes" : "no"}`} role="status">
+          {ready
+            ? `答对了！ ${shown.stars}★`
+            : `还差一点 ${why}`}{" "}
+          <span className="src">{source}</span>
         </p>
       )}
       {ready && (
+        <ul className="star-lines">
+          {starLines(correct.current, total, Date.now() - started.current, level.limitMs).map((line) => (
+            <li key={line.label} className={line.earned ? "on" : ""}>
+              {line.earned ? "★" : "☆"} {line.label}：{line.reason}
+            </li>
+          ))}
+        </ul>
+      )}
+      {ready && (
         <button className="go" onClick={next}>
-          {stepIndex === level.steps.length - 1 ? "Finish" : "Next"}
+          {index === region.levels.length - 1 && stepIndex === level.steps.length - 1 ? "回到地图" : "下一关 →"}
         </button>
       )}
         </div>
@@ -257,6 +271,7 @@ function OrderPlay({
   const moved = useRef(false);
   const dragRef = useRef<number | null>(null);
   const correct = step.items.map((item) => item.id);
+  const [marks, setMarks] = useState<Record<string, boolean> | null>(null);
   function move(from: number, to: number) {
     setOrder((current) => {
       if (from === to || to < 0 || to >= current.length) return current;
@@ -267,7 +282,12 @@ function OrderPlay({
     });
   }
   function check() {
-    order.forEach((id, index) => onMark(id, id === correct[index]));
+    const next: Record<string, boolean> = {};
+    order.forEach((id, index) => {
+      next[id] = id === correct[index];
+      onMark(id, next[id]);
+    });
+    setMarks(next);
     onReveal(step.why, step.source, order.every((id, index) => id === correct[index]));
   }
   function placeAt(clientY: number) {
@@ -287,7 +307,8 @@ function OrderPlay({
           return (
             <li
               key={id}
-              className={drag === index || picked === index ? "lift" : ""}
+              className={`${drag === index || picked === index ? "lift" : ""} ${marks?.[id] ? "right" : ""} ${marks && marks[id] === false ? "wrong" : ""}`}
+              style={marks?.[id] ? { animationDelay: `${index * 80}ms` } : undefined}
               onPointerDown={(event) => {
                 if ((event.target as HTMLElement).closest("button")) return;
                 moved.current = false;
@@ -318,14 +339,16 @@ function OrderPlay({
                 setDrag(null);
               }}
             >
+              <span className="grip" aria-hidden="true">⋮⋮</span>
               <span className="slot">{index + 1}</span>
               <span className="ico" aria-hidden="true">{iconFor(item.label)}</span>
               <b>{item.label}</b>
+              {marks?.[id] && <span className="tick" style={{ animationDelay: `${index * 80}ms` }}>✓</span>}
               <span className="mini">
-                <button aria-label={`Move ${item.label} up`} onClick={() => move(index, index - 1)}>
+                <button aria-label={`上移 ${item.label}`} disabled={index === 0} onClick={() => move(index, index - 1)}>
                   ▲
                 </button>
-                <button aria-label={`Move ${item.label} down`} onClick={() => move(index, index + 1)}>
+                <button aria-label={`下移 ${item.label}`} disabled={index === order.length - 1} onClick={() => move(index, index + 1)}>
                   ▼
                 </button>
               </span>
@@ -333,9 +356,11 @@ function OrderPlay({
           );
         })}
       </ol>
-      <button className="go" onClick={check}>
-        Check order
-      </button>
+      {!(marks && order.every((id, index) => id === correct[index])) && (
+        <button className="go" onClick={check}>
+          Check order
+        </button>
+      )}
     </>
   );
 }
@@ -349,7 +374,7 @@ function ChoicePlay({
   step: ChoiceStep;
   preview?: boolean;
   onMark: (ok: boolean) => void;
-  onReveal: (why: string, source: string) => void;
+  onReveal: (why: string, source: string, done: boolean) => void;
 }) {
   const [options] = useState(() => shuffle(step.options));
   const [picked, setPicked] = useState("");
@@ -382,14 +407,15 @@ function ChoicePlay({
         {options.map((option) => (
           <button
             key={option.id}
-            className={`tile ${picked && option.id === step.answer ? "good" : picked === option.id ? "bad" : ""}`}
-            disabled={!!picked}
+            className={`tile ${picked === step.answer && option.id === step.answer ? "good" : ""} ${picked === option.id && option.id !== step.answer ? "bad" : ""}`}
+            disabled={picked === step.answer}
             onPointerEnter={() => setHover(option.id)}
             onPointerLeave={() => setHover("")}
             onClick={() => {
+              const ok = option.id === step.answer;
               setPicked(option.id);
-              onMark(option.id === step.answer);
-              onReveal(step.why, step.source);
+              onMark(ok);
+              onReveal(step.why, step.source, ok);
             }}
           >
             <span className="ico" aria-hidden="true">{iconFor(option.label)}</span>
@@ -417,8 +443,16 @@ function AssignPlay({
   const [selected, setSelected] = useState("");
   const [cursor, setCursor] = useState(-1);
   const [jam, setJam] = useState("");
+  const [cleared, setCleared] = useState(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const dragging = useRef("");
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelected("");
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   function lift(taskId: string) {
     setPlaced((prev) => {
       const next = { ...prev };
@@ -451,6 +485,7 @@ function AssignPlay({
         return;
       }
     }
+    setCleared(true);
     onReveal("The chain ran clean.", step.tasks[0].source, true);
   }
   const tokenAt = cursor < 0 ? 0 : Math.max(0, step.agents.findIndex((agent) => agent.id === step.tasks[cursor]?.agent));
@@ -466,7 +501,7 @@ function AssignPlay({
               tabIndex={0}
               data-agent={agent.id}
               aria-label={`Desk ${agent.label}`}
-              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""}`}
+              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""} ${selected || ghost ? "placeable" : ""}`}
               style={{ ["--seat" as string]: color }}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
@@ -481,7 +516,7 @@ function AssignPlay({
                 {agent.id === "you" ? "🙂" : agent.id === "buyer" || agent.id === "analyst" ? "📦" : "🤖"}
               </span>
               <b>{agent.label}</b>
-              <small>{agent.note}</small>
+              <div className="chip-slot">
               {step.tasks
                 .filter((task) => placed[task.id] === agent.id)
                 .map((task) => (
@@ -497,6 +532,7 @@ function AssignPlay({
                   </button>
                 ))}
               {jam && placed[jam] === agent.id && jammed && <span className="puff">{jammed.why}</span>}
+              </div>
             </div>
           </div>
         ))}
@@ -534,7 +570,7 @@ function AssignPlay({
               dragging.current = "";
               setGhost(null);
             }}
-            onClick={() => setSelected(task.id)}
+            onClick={() => setSelected((current) => (current === task.id ? "" : task.id))}
           >
             <span className="ico" aria-hidden="true">{iconFor(task.label)}</span>
             {task.label}
@@ -546,9 +582,11 @@ function AssignPlay({
           {tasks.find((task) => task.id === ghost.id)?.label}
         </div>
       )}
-      <button className="go" onClick={() => void run()} disabled={Object.keys(placed).length < step.tasks.length}>
-        Run
-      </button>
+      {!cleared && (
+        <button className="go" onClick={() => void run()} disabled={Object.keys(placed).length < step.tasks.length}>
+          Run
+        </button>
+      )}
     </>
   );
 }
@@ -614,4 +652,133 @@ function wait(ms: number) {
 
 export function stepKind(step: Step) {
   return step.kind;
+}
+
+export function PlayView(props: {
+  region: Region;
+  level: Level;
+  index: number;
+  muted: boolean;
+  onExit: () => void;
+  onDone: (result: LevelResult) => void;
+}) {
+  if (props.region.id === "vibe" && props.level.id === "pipeline") return <SimpleLevel {...props} />;
+  if (props.region.id === "agentic" || props.region.id === "linkedin") return <MiniLevel {...props} />;
+  return <LegacyPlay {...props} />;
+}
+
+function SimpleLevel({
+  level,
+  index,
+  muted,
+  onExit,
+  onDone,
+  region,
+}: {
+  region: Region;
+  level: Level;
+  index: number;
+  muted: boolean;
+  onExit: () => void;
+  onDone: (result: LevelResult) => void;
+}) {
+  const step = level.steps[0];
+  const choice = step?.kind === "choice" ? step : null;
+  const [wrongId, setWrongId] = useState("");
+  const [ok, setOk] = useState(false);
+  const [shake, setShake] = useState("");
+  const missed = useRef(false);
+  const started = useRef(Date.now());
+  const game = useGame();
+  const [options] = useState(() => (choice ? shuffle(choice.options) : []));
+
+  function pick(id: string) {
+    if (ok || !choice) return;
+    if (id === choice.answer) {
+      setOk(true);
+      setWrongId("");
+      sfx("ok", muted);
+      return;
+    }
+    missed.current = true;
+    setWrongId(id);
+    setShake(id);
+    sfx("bad", muted);
+    window.setTimeout(() => setShake(""), 420);
+  }
+
+  function finish() {
+    if (!choice) return;
+    const ms = Date.now() - started.current;
+    const correct = missed.current ? 0 : 1;
+    const rated = rate(correct, gradedCount(level), ms, level.limitMs, correct);
+    onDone({
+      ...rated,
+      correct,
+      total: gradedCount(level),
+      ms,
+      at: new Date().toISOString(),
+    });
+  }
+
+  if (!choice) return null;
+
+  return (
+    <main className={`sheet theme-${region.id} play`}>
+      <header className="hud">
+        <button className="text-btn" onClick={onExit}>
+          ← Back
+        </button>
+        <span className="level-dots" aria-label={`Level ${index + 1} of ${region.levels.length}`}>
+          {region.levels.map((item, i) => (
+            <i key={item.id} className={i === index ? "now" : i < index ? "done" : ""} />
+          ))}
+        </span>
+        <b className="combo">Combo {ok ? 1 : 0}</b>
+        <TimeBonus limitMs={level.limitMs} started={started.current} />
+      </header>
+      <section className="play-scene">
+        <p className="tap-label">Tap the right answer</p>
+        <div className={`actor ${ok ? "happy" : wrongId ? "sad" : ""}`}>
+          {game.save.character && (
+            <Sprite character={game.save.character} className={ok ? "hop" : "bounce"} />
+          )}
+        </div>
+        <p className="prompt">{choice.prompt}</p>
+        <div className="choices">
+          {options.map((option) => (
+            <button
+              key={option.id}
+              className={`candy ${ok && option.id === choice.answer ? "good" : ""} ${wrongId === option.id ? "bad" : ""} ${shake === option.id ? "shake" : ""}`}
+              onClick={() => pick(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <div className="result-slot">
+        {(ok || wrongId) && (
+          <p className={`result-bar ${ok ? "yes" : "no"}`} role="status">
+            {ok
+              ? `答对了！ ${rate(missed.current ? 0 : 1, gradedCount(level), Date.now() - started.current, level.limitMs, ok ? 1 : 0).stars}★`
+              : `还差一点 ${choice.why}`}{" "}
+            <span className="src">{choice.source}</span>
+          </p>
+        )}
+        </div>
+        {ok && (
+          <button className="go big" onClick={() => { sfx("fanfare", muted); finish(); }}>
+            {index === region.levels.length - 1 ? "回到地图" : "下一关 →"}
+          </button>
+        )}
+        {ok && (
+          <div className="confetti" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span key={i} style={{ left: `${6 + i * 8}%` }} />
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  );
 }

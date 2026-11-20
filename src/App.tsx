@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Cover } from "./Cover";
 import { PlayView } from "./PlayView";
 import { Creator, RegionPath, WorldMap, Admin, SpriteSheet, levelFrom, regionFrom, useRoute } from "./screens";
@@ -12,10 +12,18 @@ function Shell() {
   const region = regionFrom(path);
   const level = levelFrom(path, region);
   const index = region && level ? region.levels.findIndex((item) => item.id === level.id) : -1;
+  const pending = useRef<string | null>(null);
   const unlocked =
     !!region &&
     !!level &&
     (index === 0 || !!game.save.levels[levelKey(region.id, region.levels[index - 1].id)]);
+  useEffect(() => {
+    if (!pending.current || !region || !level) return;
+    if (!game.save.levels[levelKey(region.id, level.id)]) return;
+    const dest = pending.current;
+    pending.current = null;
+    go(dest);
+  }, [game.save.levels, region, level, go]);
   useEffect(() => {
     if (!game.save.character) return;
     if (region?.locked) go("/map");
@@ -59,7 +67,7 @@ function Shell() {
           const wasClear = region.levels.every((item) => game.save.levels[levelKey(region.id, item.id)]);
           game.finishLevel(region.id, level.id, result);
           if (last && !wasClear) sessionStorage.setItem("party", region.id);
-          go(`/region/${region.id}`);
+          pending.current = last ? "/map" : `/region/${region.id}/level/${region.levels[index + 1].id}`;
         }}
       />
     );
