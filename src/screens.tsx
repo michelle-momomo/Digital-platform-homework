@@ -287,7 +287,6 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
                 }
                 onClick={() => open(region)}
               >
-                {guide && startHere?.id === region.id && <span className="map-guide">Start here! Tap to enter</span>}
                 <span className="banner">
                   <b>{region.title}</b>
                   <small>
@@ -296,6 +295,7 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
                   </small>
                 </span>
                 <span className="isle-art">
+                  {guide && startHere?.id === region.id && <span className="map-guide">Start here! Tap to enter</span>}
                   <IslandArt region={region} stars={stars} />
                   {here.id === region.id && !region.locked && (
                     <Walker

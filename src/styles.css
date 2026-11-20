@@ -272,9 +272,10 @@ input, select {
 .map-guide {
   position: absolute;
   z-index: 4;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 2%;
+  right: 0;
+  max-width: 60%;
+  text-align: left;
   background: #fff;
   border-radius: 16px;
   padding: 8px 10px;
@@ -282,8 +283,8 @@ input, select {
   box-shadow: 0 8px 0 #f8c8dc;
   animation: floaty 1s ease-in-out infinite;
 }
-.map-guide::after { content: " ↓"; }
-@keyframes floaty { 50% { transform: translateX(-50%) translateY(6px); } }
+.map-guide::after { content: ""; position: absolute; left: 18px; bottom: -10px; width: 0; height: 0; border-style: solid; border-width: 10px 10px 0 0; border-color: #fff transparent transparent transparent; }
+@keyframes floaty { 50% { transform: translateY(6px); } }
 .isle-btn:hover .island-art { transform: translateY(-3px); }
 .banner { display: grid; background: #fff; border-radius: 16px; padding: 6px 10px; margin: 0 auto 2px; width: max-content; max-width: 100%; box-shadow: 0 8px 0 rgba(74, 63, 85, 0.08); }
 .banner small { color: #8a7896; font-weight: 800; }
