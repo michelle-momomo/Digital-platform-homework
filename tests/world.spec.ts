@@ -50,6 +50,10 @@ test("agentic levels teach, then play", async ({ page }) => {
   await expect(page.getByText("Swipe right if true, left if false")).toBeVisible();
   await page.getByRole("button", { name: "True", exact: true }).click();
   await expect(page.getByRole("status")).toBeVisible();
+  await page.goto("/region/linkedin/level/headline");
+  await expect(page.getByText("The heading should state the topic")).toBeVisible();
+  await page.getByRole("button", { name: "Start game" }).click();
+  await expect(page.getByText("Tap the reply that fits.")).toBeVisible();
 });
 
 test("a saved pal continues from the cover", async ({ page }) => {

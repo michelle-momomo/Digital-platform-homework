@@ -629,7 +629,7 @@ export function PlayView(props: {
   onDone: (result: LevelResult) => void;
 }) {
   if (props.region.id === "vibe" && props.level.id === "pipeline") return <SimpleLevel {...props} />;
-  if (props.region.id === "agentic") return <MiniLevel {...props} />;
+  if (props.region.id === "agentic" || props.region.id === "linkedin") return <MiniLevel {...props} />;
   return <LegacyPlay {...props} />;
 }
 
