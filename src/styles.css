@@ -259,7 +259,7 @@ input, select {
 .isle-btn:not(:disabled):focus-visible { transform: scale(1.04); }
 .isle-btn:not(:disabled):hover::after,
 .isle-btn:not(:disabled):focus-visible::after {
-  content: "进入 →";
+  content: "Enter →";
   position: absolute;
   right: 8px;
   bottom: 8px;

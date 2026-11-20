@@ -99,7 +99,7 @@ function Feedback({
   source,
   last,
   onNext,
-  leave = "下一关 →",
+  leave = "Next level →",
 }: {
   ok: boolean;
   why: string;
@@ -112,7 +112,7 @@ function Feedback({
     <div className={`swipe-feedback ${ok ? "yes" : "no"}`} role="status">
       {ok && <Confetti />}
       <p>
-        {ok ? `答对了！ ${why}` : `还差一点 ${why}`} <span className="src">{source}</span>
+        {ok ? `Correct! ${why}` : `Not quite ${why}`} <span className="src">{source}</span>
       </p>
       <button className="go big" onClick={onNext}>
         {last ? leave : "Next card"}
@@ -124,7 +124,7 @@ function Feedback({
 function StarsEnd({
   stars,
   onNext,
-  leave = "下一关 →",
+  leave = "Next level →",
   lines,
 }: {
   stars: number;
@@ -134,12 +134,12 @@ function StarsEnd({
 }) {
   return (
     <div className="swipe-end">
-      <p className="result-bar yes">答对了！ {stars}★</p>
+      <p className="result-bar yes">Correct! {stars}★</p>
       {lines && (
         <ul className="star-lines">
           {lines.map((line) => (
             <li key={line.label} className={line.earned ? "on" : ""}>
-              {line.earned ? "★" : "☆"} {line.label}：{line.reason}
+              {line.earned ? "★" : "☆"} {line.label}: {line.reason}
             </li>
           ))}
         </ul>
@@ -253,7 +253,7 @@ function SwipeGame({
     <Shell region={region} level={level} index={index} onExit={onExit} how={how}>
       <b className="swipe-count">{done ? `${correct.current}/${order.length}` : `${cursor + 1}/${order.length}`}</b>
       {done ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
       ) : note ? (
         <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
       ) : card ? (
@@ -355,7 +355,7 @@ function MatchGame({
   return (
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       {done && !note ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
       ) : (
         <div className="match-board" ref={board}>
           <svg className="match-lines" aria-hidden="true">
@@ -466,7 +466,7 @@ function MemoryGame({
   return (
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       {done && !note ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
       ) : (
         <div className="memory-grid">
           {cards.map((card) => {
@@ -536,7 +536,7 @@ function SortGame({
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       <b className="swipe-count">{done ? `${correct.current}/${cards.length}` : `${cursor + 1}/${cards.length}`}</b>
       {done ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
       ) : note ? (
         <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
       ) : card ? (
@@ -613,7 +613,7 @@ function ChatGame({
           why={note.why}
           source={note.source}
           last={solved}
-          leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"}
+          leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"}
           onNext={solved ? finish : () => setNote(null)}
         />
       )}

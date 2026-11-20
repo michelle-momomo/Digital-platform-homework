@@ -154,7 +154,7 @@ export function Creator({
                 Start adventure
               </button>
             </span>
-            {!ready && <p className="name-hint">先给你的小人起个名字</p>}
+            {!ready && <p className="name-hint">Give your pal a name first</p>}
             <button className="ghost" type="button" onClick={randomize}>
               Randomize
             </button>
@@ -282,12 +282,12 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
                 disabled={region.locked}
                 aria-label={
                   region.locked
-                    ? `${region.title}，即将开放`
-                    : `${region.title}，${region.when}，已获 ${stars}/${region.levels.length * 3} 星`
+                    ? `${region.title}, coming soon`
+                    : `${region.title}, ${region.when}, ${stars} of ${region.levels.length * 3} stars`
                 }
                 onClick={() => open(region)}
               >
-                {guide && startHere?.id === region.id && <span className="map-guide">从这里开始！点击进入</span>}
+                {guide && startHere?.id === region.id && <span className="map-guide">Start here! Tap to enter</span>}
                 <span className="banner">
                   <b>{region.title}</b>
                   <small>
@@ -559,7 +559,7 @@ export function RegionPath({
               className={`node ${unlocked ? "" : "locked"} ${result ? "cleared" : ""} ${index === cleared ? "current" : ""}`}
               style={{ left, top, background: NODE_COLORS[index % NODE_COLORS.length] }}
               disabled={!unlocked}
-              title={unlocked ? undefined : `先完成第 ${index} 关`}
+              title={unlocked ? undefined : `Finish level ${index} first`}
               onClick={() => onPlay(level.id)}
             >
               {!unlocked && <span className="lock">🔒</span>}

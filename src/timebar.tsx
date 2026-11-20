@@ -30,21 +30,21 @@ export function TimeBonus({ limitMs, started }: { limitMs: number; started: numb
   const over = left <= 0;
   return (
     <span className={`timebonus ${!over && left <= 5 ? "urgent" : ""} ${over ? "over" : ""}`}>
-      <small>{over ? "限时星已错过" : `${total} 秒内答对 +1★`}</small>
+      <small>{over ? "Bonus star missed" : `Finish in ${total}s for +1★`}</small>
       <span
         className="timebar"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={left}
-        aria-label={over ? "限时星已错过" : `Bonus ${left}s`}
+        aria-label={over ? "Bonus star missed" : `Bonus ${left}s`}
       >
         <i style={{ width: `${(left / total) * 100}%` }} />
       </span>
       <b>⏱ {left}</b>
       {tip && (
         <button type="button" className="time-tip" onClick={close}>
-          限时内答对可以多拿一颗星。点这里关闭。
+          Beat the timer to earn a bonus star. Tap to dismiss.
         </button>
       )}
     </span>

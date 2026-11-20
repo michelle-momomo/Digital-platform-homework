@@ -206,8 +206,8 @@ function LegacyPlay({
       {why && (
         <p className={`result-bar ${ready ? "yes" : "no"}`} role="status">
           {ready
-            ? `答对了！ ${shown.stars}★`
-            : `还差一点 ${why}`}{" "}
+            ? `Correct! ${shown.stars}★`
+            : `Not quite ${why}`}{" "}
           <span className="src">{source}</span>
         </p>
       )}
@@ -215,14 +215,14 @@ function LegacyPlay({
         <ul className="star-lines">
           {starLines(correct.current, total, Date.now() - started.current, level.limitMs).map((line) => (
             <li key={line.label} className={line.earned ? "on" : ""}>
-              {line.earned ? "★" : "☆"} {line.label}：{line.reason}
+              {line.earned ? "★" : "☆"} {line.label}: {line.reason}
             </li>
           ))}
         </ul>
       )}
       {ready && (
         <button className="go" onClick={next}>
-          {index === region.levels.length - 1 && stepIndex === level.steps.length - 1 ? "回到地图" : "下一关 →"}
+          {index === region.levels.length - 1 && stepIndex === level.steps.length - 1 ? "Back to map" : "Next level →"}
         </button>
       )}
         </div>
@@ -345,10 +345,10 @@ function OrderPlay({
               <b>{item.label}</b>
               {marks?.[id] && <span className="tick" style={{ animationDelay: `${index * 80}ms` }}>✓</span>}
               <span className="mini">
-                <button aria-label={`上移 ${item.label}`} disabled={index === 0} onClick={() => move(index, index - 1)}>
+                <button aria-label={`Move ${item.label} up`} disabled={index === 0} onClick={() => move(index, index - 1)}>
                   ▲
                 </button>
-                <button aria-label={`下移 ${item.label}`} disabled={index === order.length - 1} onClick={() => move(index, index + 1)}>
+                <button aria-label={`Move ${item.label} down`} disabled={index === order.length - 1} onClick={() => move(index, index + 1)}>
                   ▼
                 </button>
               </span>
@@ -760,15 +760,15 @@ function SimpleLevel({
         {(ok || wrongId) && (
           <p className={`result-bar ${ok ? "yes" : "no"}`} role="status">
             {ok
-              ? `答对了！ ${rate(missed.current ? 0 : 1, gradedCount(level), Date.now() - started.current, level.limitMs, ok ? 1 : 0).stars}★`
-              : `还差一点 ${choice.why}`}{" "}
+              ? `Correct! ${rate(missed.current ? 0 : 1, gradedCount(level), Date.now() - started.current, level.limitMs, ok ? 1 : 0).stars}★`
+              : `Not quite ${choice.why}`}{" "}
             <span className="src">{choice.source}</span>
           </p>
         )}
         </div>
         {ok && (
           <button className="go big" onClick={() => { sfx("fanfare", muted); finish(); }}>
-            {index === region.levels.length - 1 ? "回到地图" : "下一关 →"}
+            {index === region.levels.length - 1 ? "Back to map" : "Next level →"}
           </button>
         )}
         {ok && (
