@@ -10,7 +10,7 @@
   line-height: 1.45;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; overflow-x: hidden; }
+html, body { margin: 0; overflow-x: clip; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; }
@@ -305,7 +305,7 @@ input, select {
   min-height: calc(100vh - 132px);
   margin-top: 8px;
   border-radius: 36px;
-  overflow: hidden;
+  overflow: clip;
   padding: 28px 28px 48px;
   display: flex;
   align-items: flex-end;
@@ -731,3 +731,5 @@ h1, .go, .banner b { font-family: Fredoka, Nunito, sans-serif; }
   .bounce, .hop, .confetti span, .chip.smoke, .lid, .drift, .combo, .agent.lit, .rocket, .wave, .bob-isle, .swipe-card.fly-right, .swipe-card.fly-left, .swipe-feedback.no { animation: none; }
 }
 .tasks button.tile { touch-action: none; user-select: none; -webkit-user-select: none; }
+.result-dock { position: sticky; bottom: 16px; z-index: 5; }
+.board .result-dock, .play-scene .result-dock { background: #fff; border-radius: 18px; padding: 8px 12px 12px; box-shadow: 0 8px 24px rgba(74, 63, 85, 0.12); }

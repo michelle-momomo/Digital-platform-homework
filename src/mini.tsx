@@ -110,7 +110,7 @@ function Feedback({
   leave?: string;
 }) {
   return (
-    <div className={`swipe-feedback ${ok ? "yes" : "no"}`} role="status">
+    <div className={`swipe-feedback result-dock ${ok ? "yes" : "no"}`} role="status">
       {ok && <Confetti />}
       <p>
         {ok ? `Correct! ${why}` : `Not quite ${why}`} <span className="src">{source}</span>
@@ -134,7 +134,7 @@ function StarsEnd({
   lines?: { label: string; earned: boolean; reason: string }[];
 }) {
   return (
-    <div className="swipe-end">
+    <div className="swipe-end result-dock">
       <p className="result-bar yes">Correct! {stars}★</p>
       {lines && (
         <ul className="star-lines">

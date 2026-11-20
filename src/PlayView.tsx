@@ -205,13 +205,13 @@ function LegacyPlay({
         />
       )}
       {why && (
+        <div className="result-dock">
         <p className={`result-bar ${ready ? "yes" : "no"}`} role="status">
           {ready
             ? `Correct! ${shown.stars}★`
             : `Not quite ${why}`}{" "}
           <span className="src">{source}</span>
         </p>
-      )}
       {ready && (
         <ul className="star-lines">
           {starLines(correct.current, total, Date.now() - started.current, level.limitMs).map((line) => (
@@ -225,6 +225,8 @@ function LegacyPlay({
         <button className="go" onClick={next}>
           {index === region.levels.length - 1 && stepIndex === level.steps.length - 1 ? "Back to map" : "Next level →"}
         </button>
+      )}
+        </div>
       )}
         </div>
         {mood === "happy" && <ConfettiLite />}
@@ -772,7 +774,7 @@ function SimpleLevel({
             </button>
           ))}
         </div>
-        <div className="result-slot">
+        <div className="result-slot result-dock">
         {(ok || wrongId) && (
           <p className={`result-bar ${ok ? "yes" : "no"}`} role="status">
             {ok
@@ -781,12 +783,12 @@ function SimpleLevel({
             <span className="src">{choice.source}</span>
           </p>
         )}
-        </div>
         {ok && (
           <button className="go big" onClick={() => { sfx("fanfare", muted); finish(); }}>
             {index === region.levels.length - 1 ? "Back to map" : "Next level →"}
           </button>
         )}
+        </div>
         {ok && (
           <div className="confetti" aria-hidden="true">
             {Array.from({ length: 12 }, (_, i) => (
