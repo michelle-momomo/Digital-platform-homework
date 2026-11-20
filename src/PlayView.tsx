@@ -445,7 +445,9 @@ function AssignPlay({
   const [jam, setJam] = useState("");
   const [cleared, setCleared] = useState(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
-  const dragging = useRef("");
+  const [dragId, setDragId] = useState("");
+  const touch = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setSelected("");
@@ -501,12 +503,8 @@ function AssignPlay({
               tabIndex={0}
               data-agent={agent.id}
               aria-label={`Desk ${agent.label}`}
-              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""} ${selected || ghost ? "placeable" : ""}`}
+              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""} ${selected || dragId ? "placeable" : ""}`}
               style={{ ["--seat" as string]: color }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                drop(agent.id, event.dataTransfer.getData("text/plain") || dragging.current);
-              }}
               onClick={() => drop(agent.id)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") drop(agent.id);
@@ -544,33 +542,49 @@ function AssignPlay({
         {tasks.filter((task) => !placed[task.id]).map((task) => (
           <button
             key={task.id}
-            draggable={!placed[task.id]}
             disabled={!!placed[task.id]}
             aria-pressed={selected === task.id}
             className={selected === task.id ? "picked tile" : "tile"}
-            onDragStart={(event) => {
-              dragging.current = task.id;
-              event.dataTransfer.setData("text/plain", task.id);
-            }}
             onPointerDown={(event) => {
-              if (placed[task.id]) return;
-              dragging.current = task.id;
-              setSelected(task.id);
-              setGhost({ id: task.id, x: event.clientX, y: event.clientY });
+              // One pointer-based drag for mouse, touch and pen. Nothing is selected here,
+              // so a plain tap still reaches onClick; a drag only starts after 10px of movement.
+              if (event.button !== 0 || placed[task.id]) return;
+              touch.current = { id: task.id, x: event.clientX, y: event.clientY, moved: false };
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
-              if (dragging.current !== task.id) return;
+              const t = touch.current;
+              if (!t || t.id !== task.id) return;
+              if (!t.moved && Math.hypot(event.clientX - t.x, event.clientY - t.y) < 10) return;
+              if (!t.moved) {
+                t.moved = true;
+                setDragId(task.id);
+              }
               setGhost({ id: task.id, x: event.clientX, y: event.clientY });
             }}
             onPointerUp={(event) => {
+              const t = touch.current;
+              touch.current = null;
+              if (!t || !t.moved) return;
+              suppressClick.current = true;
               const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-agent]");
               const agentId = hit?.getAttribute("data-agent");
               if (agentId) drop(agentId, task.id);
-              dragging.current = "";
+              setDragId("");
               setGhost(null);
             }}
-            onClick={() => setSelected((current) => (current === task.id ? "" : task.id))}
+            onPointerCancel={() => {
+              touch.current = null;
+              setDragId("");
+              setGhost(null);
+            }}
+            onClick={() => {
+              if (suppressClick.current) {
+                suppressClick.current = false;
+                return;
+              }
+              setSelected((current) => (current === task.id ? "" : task.id));
+            }}
           >
             <span className="ico" aria-hidden="true">{iconFor(task.label)}</span>
             {task.label}
