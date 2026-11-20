@@ -9,16 +9,16 @@ export function starLines(correct: number, total: number, ms: number, limitMs: n
   const partial = total > 0 && correct / total >= STAR_PARTIAL;
   const fast = ms <= limitMs;
   return [
-    { label: "完成", earned: true, reason: "本关已完成" },
+    { label: "Complete", earned: true, reason: "Level complete" },
     {
-      label: "答对达标",
+      label: "Passed",
       earned: perfect || partial,
-      reason: perfect || partial ? "全对，或答对至少 60%" : "未全对，且答对不足 60%",
+      reason: perfect || partial ? "All correct, or at least 60% correct" : "Under 60% correct",
     },
     {
-      label: "限时全对",
+      label: "Speed bonus",
       earned: perfect && fast,
-      reason: perfect && fast ? "全部答对，并且在限时内" : perfect ? "超过了限时" : "没有全部答对",
+      reason: perfect && fast ? "All correct within the time limit" : perfect ? "Time limit passed" : "Not all answers correct",
     },
   ];
 }

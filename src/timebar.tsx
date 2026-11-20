@@ -2,51 +2,27 @@ import { useEffect, useState } from "react";
 
 const TIP_KEY = "dp-timer-tip";
 
-export function TimeBonus({ limitMs, started }: { limitMs: number; started: number }) {
-  const total = Math.max(1, Math.round(limitMs / 1000));
-  const [left, setLeft] = useState(() => Math.max(0, total - Math.floor((Date.now() - started) / 1000)));
-  const [tip, setTip] = useState(false);
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setLeft(Math.max(0, total - Math.floor((Date.now() - started) / 1000)));
-    }, 250);
-    return () => window.clearInterval(timer);
-  }, [started, total]);
-  useEffect(() => {
+/** Shown once: on the first level a player opens. Seeing it marks it as seen. */
+export function TimerTip() {
+  const [show, setShow] = useState(() => {
     try {
-      if (!localStorage.getItem(TIP_KEY)) setTip(true);
+      return !localStorage.getItem(TIP_KEY);
     } catch {
-      /* storage unavailable */
+      return false;
     }
-  }, []);
-  function close() {
-    setTip(false);
+  });
+  useEffect(() => {
+    if (!show) return;
     try {
       localStorage.setItem(TIP_KEY, "1");
     } catch {
       /* storage unavailable */
     }
-  }
-  const over = left <= 0;
+  }, [show]);
+  if (!show) return null;
   return (
-    <span className={`timebonus ${!over && left <= 5 ? "urgent" : ""} ${over ? "over" : ""}`}>
-      <small>{over ? "限时星已错过" : `${total} 秒内答对 +1★`}</small>
-      <span
-        className="timebar"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={total}
-        aria-valuenow={left}
-        aria-label={over ? "限时星已错过" : `Bonus ${left}s`}
-      >
-        <i style={{ width: `${(left / total) * 100}%` }} />
-      </span>
-      <b>⏱ {left}</b>
-      {tip && (
-        <button type="button" className="time-tip" onClick={close}>
-          限时内答对可以多拿一颗星。点这里关闭。
-        </button>
-      )}
-    </span>
+    <button type="button" className="time-tip" onClick={() => setShow(false)}>
+      Beat the timer to earn a bonus star. Tap to dismiss.
+    </button>
   );
 }

@@ -1,0 +1,45 @@
+/* Design tokens. Copied verbatim from reference-level.html :root, plus extras below. */
+:root{
+  /* colour */
+  --bg:#FFF8F1;          /* page background (cream) */
+  --surface:#FFFFFF;     /* cards */
+  --ink:#4A3F55;         /* main text */
+  --muted:#8A7896;       /* secondary text */
+  --line:#EFE4D2;        /* hairlines, card borders */
+  --pink:#F4A4C4;        /* primary accent */
+  --pink-soft:#FCE6EF;
+  --pink-deep:#D98BAB;   /* primary button "pressable" edge */
+  --yellow:#F2C14E;      /* stars, timer */
+  --yellow-soft:#FFF4C9;
+  --good:#3E9E6E; --good-soft:#E3F5EA;
+  --bad:#D9655F;  --bad-soft:#FDE9E7;
+  /* type */
+  --font-display:"Fredoka", "Nunito", sans-serif;
+  --font-body:"Nunito", "Segoe UI", sans-serif;
+  --fs-13:13px; --fs-15:15px; --fs-18:18px; --fs-24:24px; --fs-32:32px; --fs-40:40px;
+  /* space (only these) */
+  --s-4:4px; --s-8:8px; --s-12:12px; --s-16:16px; --s-24:24px; --s-32:32px; --s-48:48px;
+  /* shape */
+  --r-card:20px; --r-pill:999px;
+  --edge:0 4px 0 var(--line);           /* the ONE card shadow */
+  --edge-pink:0 4px 0 var(--pink-deep); /* the ONE primary-button shadow */
+  --lift:0 8px 24px rgba(74,63,85,.08); /* floating elements only: header, bottom bar, toasts */
+  /* layout */
+  --content:720px; --header-h:56px;
+}
+
+/* ============ EXTRA TOKENS (not in the reference) ============
+   Colours the reference does not define but the app still needs.
+   Island colours (--isle-*) are for the world map and level-path pages only,
+   never for answer options. --art-* colours are for SVG illustrations only. */
+:root{
+  --good-edge:#BFE3CD;   /* pressable edge under a correct option */
+  --bad-edge:#F2C3BF;    /* pressable edge under a wrong option */
+  --on-accent:#FFFFFF;   /* text/icons on --good / --bad fills */
+  --isle-mint:#B7E4C7; --isle-lilac:#D9C7F0; --isle-sky:#C5E4F7; --isle-peach:#FFCDB2; --isle-mist:#D9D4DE;
+  --art-butter:#FFF3B0; --art-blush:#F8C8DC; --art-coral:#F08A74; --art-wood:#C68642; --art-cliff:#E7C3A8;
+  --art-sky-deep:#8EC8F5; --art-pond:#9FD4F2; --art-lily:#DFF3C8; --art-lavender:#C5B3F5;
+  --art-leaf:#7DCEA0; --art-leaf-light:#8ED6B0; --art-leaf-bright:#6FCF97;
+  --art-sea:#FFF6EE; --art-dot:#F6D5E2; --art-trail:#E7B7CC; --art-trail-soft:#F3C6D8; --art-trail-muted:#DDD4E2;
+  --art-locked:#E4E0E8; --art-locked-deep:#C8C2CE; --art-metal:#7A6B86; --art-dark:#3A3148;
+}

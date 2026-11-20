@@ -4,7 +4,10 @@ import { PlayView } from "./PlayView";
 import { Creator, RegionPath, WorldMap, Admin, SpriteSheet, levelFrom, regionFrom, useRoute } from "./screens";
 import { useGame, StoreProvider } from "./store";
 import { levelKey } from "./storage";
+import "./tokens.css";
 import "./styles.css";
+import "./buttons.css";
+import "./level.css";
 
 function Shell() {
   const { path, go } = useRoute();
