@@ -414,7 +414,9 @@ h1, .go, .banner b { font-family: Fredoka, Nunito, sans-serif; }
 .cover h1 { font-family: Fredoka, Nunito, sans-serif; font-size: clamp(30px, 4.4vw, 52px); line-height: 1.02; }
 .cover-sub { margin-top: 8px; max-width: 70ch; font-size: 15px; font-weight: 800; color: #8a7896; }
 .how { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; padding: 0; }
-.how li { background: #fff; border-radius: 22px; padding: 12px; box-shadow: 0 8px 0 #f6e3ea; }
+.how li { background: #fff; border-radius: 22px; padding: 12px; box-shadow: none; cursor: default; }
+.start-main { min-width: 200px; min-height: 52px; display: inline-grid; place-items: center; margin: 8px auto 4px; }
+.cover-actions { justify-content: center; }
 .how b, .how small { display: block; }
 .how small { margin-top: 2px; color: #8a7896; font-size: 12px; font-weight: 800; }
 .step-ico { font-size: 22px; }
@@ -424,12 +426,13 @@ h1, .go, .banner b { font-family: Fredoka, Nunito, sans-serif; }
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 800;
-  box-shadow: 0 6px 0 rgba(74, 63, 85, 0.08);
+  box-shadow: none;
+  cursor: default;
 }
 .session.mint { background: #b7e4c7; }
 .session.lilac { background: #d9c7f0; }
 .session.baby { background: #c5e4f7; }
-.session.mist { background: #e4e0e8; color: #6d6278; }
+.session.mist { background: #efeaf2; color: #b3a8bc; }
 .cover-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
 .creator-actions { display: grid; justify-items: center; gap: 8px; margin-top: 14px; }
 .primary-wrap { display: inline-block; }
