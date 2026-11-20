@@ -246,7 +246,36 @@ input, select {
   width: max-content;
   align-items: center;
 }
-.isle-btn { width: 100%; background: transparent; border: 0; padding: 0; box-shadow: none; }
+.isle-btn { width: 100%; background: transparent; border: 0; padding: 0; box-shadow: none; position: relative; }
+.isle-btn:not(:disabled):hover,
+.isle-btn:not(:disabled):focus-visible { transform: scale(1.04); }
+.isle-btn:not(:disabled):hover::after,
+.isle-btn:not(:disabled):focus-visible::after {
+  content: "进入 →";
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-weight: 800;
+  font-size: 12px;
+}
+.map-guide {
+  position: absolute;
+  z-index: 4;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 8px 10px;
+  font-weight: 800;
+  box-shadow: 0 8px 0 #f8c8dc;
+  animation: floaty 1s ease-in-out infinite;
+}
+.map-guide::after { content: " ↓"; }
+@keyframes floaty { 50% { transform: translateX(-50%) translateY(6px); } }
 .isle-btn:hover .island-art { transform: translateY(-3px); }
 .banner { display: grid; background: #fff; border-radius: 16px; padding: 6px 10px; margin: 0 auto 2px; width: max-content; max-width: 100%; box-shadow: 0 8px 0 rgba(74, 63, 85, 0.08); }
 .banner small { color: #8a7896; font-weight: 800; }

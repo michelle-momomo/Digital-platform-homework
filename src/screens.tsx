@@ -207,11 +207,29 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
   const { character } = game.save;
   const [spot, setSpot] = useState(game.save.here);
   const [walking, setWalking] = useState(false);
+  const [guide, setGuide] = useState(false);
   useEffect(() => {
     window.scrollTo({ top: 0 });
+    try {
+      if (!localStorage.getItem("dp-map-guide")) setGuide(true);
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
+  function dismissGuide() {
+    setGuide(false);
+    try {
+      localStorage.setItem("dp-map-guide", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  }
   if (!character) return null;
   const here = regions.find((region) => region.id === spot) ?? playable[0];
+  const startHere = playable.find((item) => {
+    const done = item.levels.filter((level) => game.save.levels[levelKey(item.id, level.id)]).length;
+    return done < item.levels.length;
+  });
   function open(region: Region) {
     if (region.locked || walking) return;
     sfx("pop", game.save.mute);
@@ -250,7 +268,7 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
           {game.save.mute ? "Sound off" : "Sound on"}
         </button>
       </header>
-      <div className="map-wrap">
+      <div className="map-wrap" onClick={guide ? dismissGuide : undefined}>
         <MapArt />
         {regions.map((region) => {
           const stars = region.levels.reduce(
@@ -259,7 +277,17 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
           );
           return (
             <div key={region.id} className={`isle ${region.locked ? "locked" : ""}`} style={{ left: `${region.x}%`, top: `${region.y}%` }}>
-              <button className="isle-btn" disabled={region.locked} onClick={() => open(region)}>
+              <button
+                className="isle-btn"
+                disabled={region.locked}
+                aria-label={
+                  region.locked
+                    ? `${region.title}，即将开放`
+                    : `${region.title}，${region.when}，已获 ${stars}/${region.levels.length * 3} 星`
+                }
+                onClick={() => open(region)}
+              >
+                {guide && startHere?.id === region.id && <span className="map-guide">从这里开始！点击进入</span>}
                 <span className="banner">
                   <b>{region.title}</b>
                   <small>
@@ -434,7 +462,7 @@ function IslandArt({ region, stars }: { region: Region; stars: number }) {
       )}
       {!region.locked &&
         dots.map((dot, i) => (
-          <g key={i}>
+          <g key={i} pointerEvents="none" opacity="0.55">
             <circle cx={dot.x} cy={dot.y} r="11" fill={done[i] ? "#F2C14E" : "#fff"} stroke="#4A3B55" strokeWidth="1.6" />
             <text x={dot.x} y={dot.y + 3.5} textAnchor="middle" fontSize="11" fontWeight="800" fill="#4A3B55">
               {i + 1}
