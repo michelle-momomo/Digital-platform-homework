@@ -339,15 +339,16 @@ function OrderPlay({
                 setDrag(null);
               }}
             >
+              <span className="grip" aria-hidden="true">⋮⋮</span>
               <span className="slot">{index + 1}</span>
               <span className="ico" aria-hidden="true">{iconFor(item.label)}</span>
               <b>{item.label}</b>
               {marks?.[id] && <span className="tick" style={{ animationDelay: `${index * 80}ms` }}>✓</span>}
               <span className="mini">
-                <button aria-label={`Move ${item.label} up`} onClick={() => move(index, index - 1)}>
+                <button aria-label={`上移 ${item.label}`} disabled={index === 0} onClick={() => move(index, index - 1)}>
                   ▲
                 </button>
-                <button aria-label={`Move ${item.label} down`} onClick={() => move(index, index + 1)}>
+                <button aria-label={`下移 ${item.label}`} disabled={index === order.length - 1} onClick={() => move(index, index + 1)}>
                   ▼
                 </button>
               </span>
@@ -515,6 +516,7 @@ function AssignPlay({
                 {agent.id === "you" ? "🙂" : agent.id === "buyer" || agent.id === "analyst" ? "📦" : "🤖"}
               </span>
               <b>{agent.label}</b>
+              <div className="chip-slot">
               {step.tasks
                 .filter((task) => placed[task.id] === agent.id)
                 .map((task) => (
@@ -530,6 +532,7 @@ function AssignPlay({
                   </button>
                 ))}
               {jam && placed[jam] === agent.id && jammed && <span className="puff">{jammed.why}</span>}
+              </div>
             </div>
           </div>
         ))}
@@ -753,6 +756,7 @@ function SimpleLevel({
             </button>
           ))}
         </div>
+        <div className="result-slot">
         {(ok || wrongId) && (
           <p className={`result-bar ${ok ? "yes" : "no"}`} role="status">
             {ok
@@ -761,6 +765,7 @@ function SimpleLevel({
             <span className="src">{choice.source}</span>
           </p>
         )}
+        </div>
         {ok && (
           <button className="go big" onClick={() => { sfx("fanfare", muted); finish(); }}>
             {index === region.levels.length - 1 ? "回到地图" : "下一关 →"}
