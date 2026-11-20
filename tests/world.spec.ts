@@ -33,9 +33,8 @@ test("create a pal, walk the map, and clear the first level", async ({ page }) =
   await page.getByRole("button", { name: "Host it before you design" }).click();
   await expect(page.getByText("Design the look, build it, push the code, then connect hosting.")).toBeVisible();
   await page.getByRole("button", { name: "Design, then build, push, and host" }).click();
-  await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Vibe Coding" })).toBeVisible();
-  await expect(page.locator(".stars .on").first()).toBeVisible();
+  await page.getByRole("button", { name: "下一关 →" }).click();
+  await expect(page.getByText("Drop each job on the tool that actually does it.")).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
