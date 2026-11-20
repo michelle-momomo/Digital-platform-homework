@@ -3,6 +3,11 @@ import type { Page } from "@playwright/test";
 
 async function create(page: Page, name: string) {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Digital Platforms · Guest Sessions" })).toBeVisible();
+  await expect(page.getByText("Vibe Coding · LaunchLab · 9 Oct")).toBeVisible();
+  await expect(page.getByText("Agentic AI · Nick Goh · 30 Oct")).toBeVisible();
+  await expect(page.getByText("LinkedIn · Cindy Leong · 13 Nov")).toBeVisible();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
   await page.getByRole("button", { name: "Boy", exact: true }).click();
   await expect(page.getByRole("button", { name: "Spiky", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pigtails", exact: true })).toHaveCount(0);
@@ -50,6 +55,38 @@ test("create a pal, walk the map, and clear the first level", async ({ page }) =
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
+});
+
+test("a saved pal continues from the cover", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "dp-quest-v1",
+      JSON.stringify({
+        character: {
+          name: "Mina",
+          studentId: "",
+          gender: "girl",
+          hair: "pigtails",
+          hairColor: "#C5B3F5",
+          skin: "#F6C8A4",
+          outfit: "#F8C8DC",
+        },
+        mute: true,
+        here: "vibe",
+        levels: {},
+        logs: [],
+      }),
+    );
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "World map" })).toBeVisible();
+  await page.getByRole("button", { name: "Cover", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Digital Platforms · Guest Sessions" })).toBeVisible();
+  await page.getByRole("button", { name: "New character", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Start adventure" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test("admin explains a missing backend", async ({ page }) => {

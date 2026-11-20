@@ -183,7 +183,7 @@ function Swatches({
   );
 }
 
-export function WorldMap({ onEdit }: { onEdit: () => void }) {
+export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () => void }) {
   const game = useGame();
   const { character } = game.save;
   const [spot, setSpot] = useState(game.save.here);
@@ -205,9 +205,14 @@ export function WorldMap({ onEdit }: { onEdit: () => void }) {
   return (
     <div className="world">
       <header className="topbar">
-        <div>
-          <p className="kicker">Digital Platforms · Guest Sessions</p>
-          <h1>World map</h1>
+        <div className="brand">
+          <button className="home-btn" onClick={onHome} aria-label="Cover">
+            ✿
+          </button>
+          <div>
+            <p className="kicker">Digital Platforms · Guest Sessions</p>
+            <h1>World map</h1>
+          </div>
         </div>
         <div className="who">
           <Sprite character={character} className="bounce" />

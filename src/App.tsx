@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Cover } from "./Cover";
 import { PlayView } from "./PlayView";
 import { Creator, RegionPath, WorldMap, Admin, SpriteSheet, levelFrom, regionFrom, useRoute } from "./screens";
 import { useGame, StoreProvider } from "./store";
@@ -16,20 +17,31 @@ function Shell() {
     !!level &&
     (index === 0 || !!game.save.levels[levelKey(region.id, region.levels[index - 1].id)]);
   useEffect(() => {
-    if (region?.locked) go("/");
+    if (!game.save.character) return;
+    if (region?.locked) go("/map");
     else if (region && level && !unlocked) go(`/region/${region.id}`);
-  }, [path, region, level, unlocked, go]);
+  }, [path, region, level, unlocked, go, game.save.character]);
   if (path === "/admin") return <Admin />;
   if (path === "/sprites") return <SpriteSheet />;
-  if (!game.save.character || path === "/edit") {
+  if (path === "/edit" || path === "/new") {
     return (
       <Creator
-        initial={game.save.character}
-        onCancel={game.save.character ? () => go("/") : undefined}
+        initial={path === "/edit" ? game.save.character : null}
+        onCancel={game.save.character ? () => go(path === "/edit" ? "/map" : "/") : () => go("/")}
         onDone={(character) => {
           game.setCharacter(character);
-          go("/");
+          go("/map");
         }}
+      />
+    );
+  }
+  if (path === "/" || !game.save.character) {
+    return (
+      <Cover
+        character={game.save.character}
+        onStart={() => go("/new")}
+        onContinue={() => go("/map")}
+        onNew={() => go("/new")}
       />
     );
   }
@@ -56,12 +68,12 @@ function Shell() {
     return (
       <RegionPath
         region={region}
-        onMap={() => go("/")}
+        onMap={() => go("/map")}
         onPlay={(id) => go(`/region/${region.id}/level/${id}`)}
       />
     );
   }
-  return <WorldMap onEdit={() => go("/edit")} />;
+  return <WorldMap onEdit={() => go("/edit")} onHome={() => go("/")} />;
 }
 
 export default function App() {
