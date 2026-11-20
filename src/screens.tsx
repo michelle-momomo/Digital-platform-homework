@@ -71,7 +71,7 @@ export function Creator({
         <div className="pedestal">
           <span className="spark">✦</span>
           <Sprite character={draft} className="bounce big" label="Your avatar preview" />
-          <button type="button" className="text-btn name-me" onClick={focusName}>
+          <button type="button" className="btn btn-text name-me" onClick={focusName}>
             {draft.name.trim() || "Name me"}
           </button>
         </div>
@@ -83,10 +83,10 @@ export function Creator({
           }}
         >
           <div className="row center">
-            <button type="button" className={draft.gender === "girl" ? "on" : ""} onClick={() => setGender("girl")}>
+            <button type="button" className="btn btn-secondary" aria-pressed={draft.gender === "girl"} onClick={() => setGender("girl")}>
               Girl
             </button>
-            <button type="button" className={draft.gender === "boy" ? "on" : ""} onClick={() => setGender("boy")}>
+            <button type="button" className="btn btn-secondary" aria-pressed={draft.gender === "boy"} onClick={() => setGender("boy")}>
               Boy
             </button>
           </div>
@@ -149,17 +149,19 @@ export function Creator({
             />
           </label>
           <div className="creator-actions">
-            <span className="primary-wrap" onClick={pokeDisabled}>
-              <button className="go big primary" type="submit" disabled={!ready}>
-                Start adventure
+            <div className="action-row">
+              <button className="btn btn-secondary" type="button" onClick={randomize}>
+                Randomize
               </button>
-            </span>
+              <span className="primary-wrap" onClick={pokeDisabled}>
+                <button className="btn btn-primary" type="submit" disabled={!ready}>
+                  Start adventure
+                </button>
+              </span>
+            </div>
             {!ready && <p className="name-hint">Give your pal a name first</p>}
-            <button className="ghost" type="button" onClick={randomize}>
-              Randomize
-            </button>
             {onCancel && (
-              <button className="text-btn" type="button" onClick={onCancel}>
+              <button className="btn btn-text" type="button" onClick={onCancel}>
                 Back
               </button>
             )}
@@ -245,7 +247,7 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
     <div className="world">
       <header className="topbar">
         <div className="brand">
-          <button className="home-btn" onClick={onHome} aria-label="Cover">
+          <button className="btn btn-secondary home-btn" onClick={onHome} aria-label="Cover">
             ✿
           </button>
           <div>
@@ -258,12 +260,12 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
           <div>
             <b>{character.name}</b>
             <span>{game.stars} stars</span>
-            <button className="text-btn" onClick={onEdit}>
+            <button className="btn btn-text" onClick={onEdit}>
               Edit character
             </button>
           </div>
         </div>
-        <button className="ghost" onClick={() => game.setMute(!game.save.mute)}>
+        <button className="btn btn-secondary" aria-pressed={!game.save.mute} onClick={() => game.setMute(!game.save.mute)}>
           {game.save.mute ? "Sound off" : "Sound on"}
         </button>
       </header>
@@ -536,7 +538,7 @@ export function RegionPath({
   }, [region.id, game.save.mute]);
   return (
     <main className="path">
-      <button className="text-btn" onClick={onMap}>
+      <button className="btn btn-text back-link" onClick={onMap}>
         ← World map
       </button>
       <h1>{region.title}</h1>
@@ -656,7 +658,7 @@ export function ResultCard({ region }: { region: Region }) {
     <div className="card-wrap">
       <canvas ref={canvas} />
       <button
-        className="go"
+        className="btn btn-primary"
         onClick={() => canvas.current && downloadCard(canvas.current, character.name)}
       >
         Save card
@@ -703,7 +705,7 @@ export function Admin() {
             aria-label="Passcode"
             onChange={(event) => setCode(event.target.value)}
           />
-          <button className="go" type="submit">
+          <button className="btn btn-primary" type="submit">
             Unlock
           </button>
         </form>

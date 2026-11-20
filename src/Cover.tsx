@@ -68,15 +68,15 @@ export function Cover({
         <div className="cover-actions">
           {character ? (
             <>
-              <button className="go big start-main" onClick={onContinue}>
+              <button className="btn btn-primary" onClick={onContinue}>
                 Continue
               </button>
-              <button className="text-btn" onClick={onNew}>
+              <button className="btn btn-text" onClick={onNew}>
                 New character
               </button>
             </>
           ) : (
-            <button className="go big start-main" onClick={onStart}>
+            <button className="btn btn-primary" onClick={onStart}>
               Start
             </button>
           )}
