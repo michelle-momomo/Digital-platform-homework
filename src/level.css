@@ -124,14 +124,17 @@
   .opt.bad,.swipe-card.bad,.combo{animation:none}
 }
 
-/* assign: tools across, jobs below (drop-target look is in B4) */
+/* assign: tools across, jobs below */
 .assign{display:flex;flex-direction:column;gap:var(--s-24)}
 .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s-12)}
 .slot{display:flex;flex-direction:column;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--edge);overflow:hidden;border:2px solid var(--line);cursor:pointer;user-select:none;-webkit-user-select:none}
 .slot .nm{display:flex;align-items:center;gap:var(--s-8);padding:var(--s-12) var(--s-16);font-weight:800}
 .slot.lit{border-color:var(--ink)}
 .slot.shake{animation:shake .3s}
-.drop{flex:1;display:flex;flex-direction:column;gap:var(--s-8);padding:var(--s-8)}
+/* B4 drop target: the lower half of every tool card is a dashed "Drop here" box */
+.drop{flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--s-8);min-height:56px;margin:0 var(--s-8) var(--s-8);padding:var(--s-4);border:2px dashed var(--line);border-radius:12px;font-size:var(--fs-13);color:var(--muted);text-align:center;transition:border-color .12s, background .12s}
+.slot.ready{border-color:var(--pink)}
+.slot.ready .drop{border-color:var(--pink);background:var(--pink-soft);color:var(--ink)}
 .chip{display:block;width:100%;padding:var(--s-8) var(--s-12);border-radius:12px;background:var(--surface);border:2px solid var(--line);box-shadow:var(--edge);font:inherit;font-weight:700;font-size:var(--fs-13);text-align:left;color:var(--ink);cursor:pointer}
 .chip.bad{border-color:var(--bad);background:var(--bad-soft)}
 .chip.good{border-color:var(--good);background:var(--good-soft)}
