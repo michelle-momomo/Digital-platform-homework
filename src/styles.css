@@ -140,7 +140,7 @@ input, select {
   color: #b3a8bc;
 }
 .flag.done { background: transparent; color: #3d9b6e; }
-.node:disabled { filter: grayscale(0.8); opacity: 0.6; cursor: not-allowed; }
+.node:disabled { filter: grayscale(0.8); color: #8a7896; cursor: not-allowed; }
 .node .lock { position: absolute; top: 6px; right: 8px; }
 .node.current { animation: breathe 1.6s ease-in-out infinite; }
 @keyframes breathe { 50% { transform: scale(1.04); } }
@@ -292,10 +292,13 @@ input, select {
 .isle .walker em { background: #fff; }
 .drift { animation: drift 9s ease-in-out infinite alternate; }
 @keyframes drift { to { transform: translateX(16px); } }
-.trail { position: relative; height: 560px; margin-top: 8px; }
-.trail-art { position: absolute; inset: 0; width: 100%; height: 100%; }
-.node { position: absolute; width: min(230px, 48%); z-index: 1; }
-.flag { position: absolute; left: 58%; top: 90%; }
+.trail { position: relative; display: flex; flex-direction: column; gap: 40px; margin-top: 16px; padding: 8px 0 16px; }
+.trail-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.node { position: relative; width: min(300px, 64%); z-index: 1; }
+.node.side-l { align-self: flex-start; margin-left: 6%; }
+.node.side-r { align-self: flex-end; margin-right: 6%; }
+.flag { z-index: 1; }
+.flag { position: relative; align-self: center; }
 .scene {
   position: relative;
   min-height: calc(100vh - 132px);

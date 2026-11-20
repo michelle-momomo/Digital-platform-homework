@@ -501,25 +501,32 @@ export function RegionPath({
   const cleared = game.cleared(region.id);
   const done = cleared === region.levels.length;
   const trailRef = useRef<HTMLDivElement>(null);
-  const [pathPoints, setPathPoints] = useState("");
+  const [segments, setSegments] = useState<string[]>([]);
   useEffect(() => {
     const box = trailRef.current;
     if (!box) return;
     const measure = () => {
       const base = box.getBoundingClientRect();
-      const spots = [...box.querySelectorAll<HTMLElement>(".node, .flag")];
-      setPathPoints(
-        spots
-          .map((spot) => {
-            const rect = spot.getBoundingClientRect();
-            return `${rect.left + rect.width / 2 - base.left},${rect.top + rect.height / 2 - base.top}`;
-          })
-          .join(" "),
-      );
+      const rects = [...box.querySelectorAll<HTMLElement>(".node, .flag")].map((spot) => {
+        const rect = spot.getBoundingClientRect();
+        return { x: rect.left - base.left, y: rect.top - base.top, w: rect.width, h: rect.height };
+      });
+      const next: string[] = [];
+      for (let i = 1; i < rects.length; i++) {
+        const a = edgePoint(rects[i - 1], rects[i]);
+        const b = edgePoint(rects[i], rects[i - 1]);
+        if (a && b) next.push(`M${a.x},${a.y} L${b.x},${b.y}`);
+      }
+      setSegments(next);
     };
     measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [region.id, cleared]);
   useEffect(() => {
     if (sessionStorage.getItem("party") === region.id) {
@@ -546,18 +553,18 @@ export function RegionPath({
       )}
       <div className="trail" ref={trailRef}>
         <svg className="trail-art" aria-hidden="true">
-          <polyline points={pathPoints} fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinejoin="round" strokeLinecap="round" />
+          {segments.map((d) => (
+            <path key={d} d={d} fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinecap="round" />
+          ))}
         </svg>
         {region.levels.map((level, index) => {
           const result = game.save.levels[levelKey(region.id, level.id)];
           const unlocked = index === 0 || game.save.levels[levelKey(region.id, region.levels[index - 1].id)];
-          const left = index % 2 === 0 ? "12%" : "58%";
-          const top = `${6 + index * 14}%`;
           return (
             <button
               key={level.id}
-              className={`node ${unlocked ? "" : "locked"} ${result ? "cleared" : ""} ${index === cleared ? "current" : ""}`}
-              style={{ left, top, background: NODE_COLORS[index % NODE_COLORS.length] }}
+              className={`node ${index % 2 === 0 ? "side-l" : "side-r"} ${unlocked ? "" : "locked"} ${result ? "cleared" : ""} ${index === cleared ? "current" : ""}`}
+              style={{ background: NODE_COLORS[index % NODE_COLORS.length] }}
               disabled={!unlocked}
               title={unlocked ? undefined : `Finish level ${index} first`}
               onClick={() => onPlay(level.id)}
@@ -584,6 +591,21 @@ export function RegionPath({
       </div>
     </main>
   );
+}
+
+type Box = { x: number; y: number; w: number; h: number };
+
+/** Where the line from `from`'s centre towards `to`'s centre leaves `from`, plus a small gap. */
+function edgePoint(from: Box, to: Box, gap = 10) {
+  const cx = from.x + from.w / 2;
+  const cy = from.y + from.h / 2;
+  const dx = to.x + to.w / 2 - cx;
+  const dy = to.y + to.h / 2 - cy;
+  if (dx === 0 && dy === 0) return null;
+  const sx = dx === 0 ? Infinity : (from.w / 2 + gap) / Math.abs(dx);
+  const sy = dy === 0 ? Infinity : (from.h / 2 + gap) / Math.abs(dy);
+  const s = Math.min(sx, sy, 1);
+  return { x: Math.round(cx + dx * s), y: Math.round(cy + dy * s) };
 }
 
 function Stars({ n }: { n: number }) {
