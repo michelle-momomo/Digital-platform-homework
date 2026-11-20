@@ -6,7 +6,7 @@ import { gradedCount } from "./content";
 import { rate, starLines, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
-import { TimeBonus } from "./timebar";
+import { TimeBonus, TimerTip } from "./timebar";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -129,6 +129,7 @@ function LegacyPlay({
           {muted ? "Muted" : "Sound"}
         </button>
       </header>
+      <TimerTip />
       <div className={`scene ${ready ? "cleared" : ""}`}>
         <div className="sky" aria-hidden="true" />
         {game.save.character && (
@@ -751,6 +752,7 @@ function SimpleLevel({
         <b className="combo">Combo {ok ? 1 : 0}</b>
         <TimeBonus limitMs={level.limitMs} started={started.current} />
       </header>
+      <TimerTip />
       <section className="play-scene">
         <p className="tap-label">Tap the right answer</p>
         <div className={`actor ${ok ? "happy" : wrongId ? "sad" : ""}`}>

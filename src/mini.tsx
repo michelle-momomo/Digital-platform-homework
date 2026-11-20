@@ -5,7 +5,7 @@ import { gradedCount } from "./content";
 import { rate, starLines } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
-import { TimeBonus } from "./timebar";
+import { TimeBonus, TimerTip } from "./timebar";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -85,6 +85,7 @@ function Shell({
         </span>
         <TimeBonus limitMs={level.limitMs} started={started.current} />
       </header>
+      <TimerTip />
       <section className="swipe-stage">
         <p className="swipe-hint">{how}</p>
         {children}
