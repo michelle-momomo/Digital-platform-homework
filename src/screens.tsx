@@ -207,6 +207,9 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
   const { character } = game.save;
   const [spot, setSpot] = useState(game.save.here);
   const [walking, setWalking] = useState(false);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, []);
   if (!character) return null;
   const here = regions.find((region) => region.id === spot) ?? playable[0];
   function open(region: Region) {
