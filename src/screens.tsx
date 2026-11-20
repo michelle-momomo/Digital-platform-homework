@@ -209,7 +209,6 @@ export function WorldMap({ onEdit, onHome }: { onEdit: () => void; onHome: () =>
   const [walking, setWalking] = useState(false);
   const [guide, setGuide] = useState(false);
   useEffect(() => {
-    window.scrollTo({ top: 0 });
     try {
       if (!localStorage.getItem("dp-map-guide")) setGuide(true);
     } catch {
@@ -849,6 +848,10 @@ export function useRoute() {
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, []);
+  useEffect(() => {
+    // Every route change starts at the top of the page.
+    window.scrollTo(0, 0);
+  }, [path]);
   const go = useCallback((to: string) => {
     window.history.pushState({}, "", to);
     setPath(window.location.pathname);
