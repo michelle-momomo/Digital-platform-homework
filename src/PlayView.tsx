@@ -651,7 +651,7 @@ function SimpleLevel({
   const missed = useRef(false);
   const started = useRef(Date.now());
   const game = useGame();
-  const guide = !ok && !wrongId;
+  const [options] = useState(() => (choice ? shuffle(choice.options) : []));
 
   function pick(id: string) {
     if (ok || !choice) return;
@@ -705,11 +705,10 @@ function SimpleLevel({
         </div>
         <p className="prompt">{choice.prompt}</p>
         <div className="choices">
-          {guide && <span className="hand" aria-hidden="true">👆</span>}
-          {choice.options.map((option) => (
+          {options.map((option) => (
             <button
               key={option.id}
-              className={`tile ${ok && option.id === choice.answer ? "good" : ""} ${wrongId === option.id ? "bad" : ""} ${shake === option.id ? "shake" : ""}`}
+              className={`candy ${ok && option.id === choice.answer ? "good" : ""} ${wrongId === option.id ? "bad" : ""} ${shake === option.id ? "shake" : ""}`}
               onClick={() => pick(option.id)}
             >
               {option.label}
