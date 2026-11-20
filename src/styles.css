@@ -287,6 +287,9 @@ input, select {
 .result-bar { border-radius: 18px; padding: 12px; margin-top: 10px; font-weight: 800; background: #fff; }
 .result-bar.yes { box-shadow: inset 0 0 0 3px #3d9b6e; }
 .result-bar.no { box-shadow: inset 0 0 0 3px #e07a6a; }
+.star-lines { list-style: none; margin: 8px 0; padding: 0; text-align: left; }
+.star-lines li { font-weight: 800; color: #b3a8bc; }
+.star-lines li.on { color: #4a3f55; }
 .stack li { cursor: grab; border-left: 8px solid #f8c8dc; }
 .stack li:nth-child(4n + 2) { border-left-color: #b7e4c7; background: #f3fbf6; }
 .stack li:nth-child(4n + 3) { border-left-color: #c5e4f7; background: #f4fbff; }

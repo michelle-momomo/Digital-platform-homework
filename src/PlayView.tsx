@@ -3,7 +3,7 @@ import { Sprite } from "./AvatarView";
 import { MiniLevel } from "./mini";
 import type { AssignStep, ChoiceStep, Level, OrderStep, PokerStep, Region, Step } from "./content";
 import { gradedCount } from "./content";
-import { rate, voiceRank } from "./logic";
+import { rate, starLines, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
 import type { LevelResult } from "./storage";
@@ -106,7 +106,8 @@ function LegacyPlay({
 
   const meter = total === 0 ? 0 : Math.round((correct.current / total) * 100);
 
-  const shownStars = Math.min(3, correct.current);
+  const shown = rate(correct.current, total, Date.now() - started.current, level.limitMs, bestCombo.current);
+  const shownStars = shown.stars;
   if (step.kind !== "order" && step.kind !== "choice" && step.kind !== "assign" && step.kind !== "poker") {
     return null;
   }
@@ -214,10 +215,19 @@ function LegacyPlay({
       {why && (
         <p className={`result-bar ${ready ? "yes" : "no"}`} role="status">
           {ready
-            ? `答对了！ ${rate(correct.current, total, Date.now() - started.current, level.limitMs, bestCombo.current).stars}★`
+            ? `答对了！ ${shown.stars}★`
             : `还差一点 ${why}`}{" "}
           <span className="src">{source}</span>
         </p>
+      )}
+      {ready && (
+        <ul className="star-lines">
+          {starLines(correct.current, total, Date.now() - started.current, level.limitMs).map((line) => (
+            <li key={line.label} className={line.earned ? "on" : ""}>
+              {line.earned ? "★" : "☆"} {line.label}：{line.reason}
+            </li>
+          ))}
+        </ul>
       )}
       {ready && (
         <button className="go" onClick={next}>

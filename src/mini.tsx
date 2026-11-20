@@ -2,7 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { Sprite } from "./AvatarView";
 import type { Level, MatchStep, MemoryStep, Region, SortStep, SwipeCard } from "./content";
 import { gradedCount } from "./content";
-import { rate } from "./logic";
+import { rate, starLines } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
 import type { LevelResult } from "./storage";
@@ -122,14 +122,25 @@ function StarsEnd({
   stars,
   onNext,
   leave = "下一关 →",
+  lines,
 }: {
   stars: number;
   onNext: () => void;
   leave?: string;
+  lines?: { label: string; earned: boolean; reason: string }[];
 }) {
   return (
     <div className="swipe-end">
       <p className="result-bar yes">答对了！ {stars}★</p>
+      {lines && (
+        <ul className="star-lines">
+          {lines.map((line) => (
+            <li key={line.label} className={line.earned ? "on" : ""}>
+              {line.earned ? "★" : "☆"} {line.label}：{line.reason}
+            </li>
+          ))}
+        </ul>
+      )}
       <span className="stars" aria-label={`${stars} stars`}>
         {[1, 2, 3].map((star) => (
           <i key={star} className={star <= stars ? "on" : ""} />
@@ -159,13 +170,29 @@ function useFinish(
 ) {
   const started = useRef(Date.now());
   const correct = useRef(0);
-  function finish() {
-    const total = gradedCount(level);
-    const rated = rate(correct.current, total, Date.now() - started.current, level.limitMs, correct.current);
-    sfx("fanfare", muted);
-    onDone({ ...rated, correct: correct.current, total, ms: Date.now() - started.current, at: new Date().toISOString() });
+  const snap = useRef<null | { stars: 1 | 2 | 3; score: number; ms: number; total: number; lines: ReturnType<typeof starLines> }>(null);
+  function shot() {
+    if (!snap.current) {
+      const ms = Date.now() - started.current;
+      const total = gradedCount(level);
+      const rated = rate(correct.current, total, ms, level.limitMs, correct.current);
+      snap.current = { ...rated, ms, total, lines: starLines(correct.current, total, ms, level.limitMs) };
+    }
+    return snap.current;
   }
-  return { correct, finish, started };
+  function finish() {
+    const frozen = shot();
+    sfx("fanfare", muted);
+    onDone({
+      stars: frozen.stars,
+      score: frozen.score,
+      correct: correct.current,
+      total: frozen.total,
+      ms: frozen.ms,
+      at: new Date().toISOString(),
+    });
+  }
+  return { correct, finish, shot };
 }
 
 function SwipeGame({
@@ -193,10 +220,9 @@ function SwipeGame({
   const [dragging, setDragging] = useState(false);
   const [fly, setFly] = useState<"" | "left" | "right">("");
   const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
-  const [stars, setStars] = useState(0);
   const origin = useRef(0);
   const dxRef = useRef(0);
-  const { correct, finish } = useFinish(level, muted, onDone);
+  const { correct, finish, shot } = useFinish(level, muted, onDone);
   const card = order[cursor];
   const done = cursor >= order.length;
 
@@ -216,11 +242,7 @@ function SwipeGame({
   function advance() {
     const next = cursor + 1;
     setNote(null);
-    if (next >= order.length) {
-      const total = order.length;
-      const rated = rate(correct.current, total, 1000, level.limitMs, correct.current);
-      setStars(rated.stars);
-    }
+    if (next >= order.length) shot();
     setCursor(next);
   }
 
@@ -228,7 +250,7 @@ function SwipeGame({
     <Shell region={region} level={level} index={index} onExit={onExit} how={how}>
       <b className="swipe-count">{done ? `${correct.current}/${order.length}` : `${cursor + 1}/${order.length}`}</b>
       {done ? (
-        <StarsEnd stars={stars} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
       ) : note ? (
         <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
       ) : card ? (
@@ -295,7 +317,7 @@ function MatchGame({
   const [shake, setShake] = useState("");
   const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
   const missed = useRef(new Set<string>());
-  const { correct, finish } = useFinish(level, muted, onDone);
+  const { correct, finish, shot } = useFinish(level, muted, onDone);
   const board = useRef<HTMLDivElement>(null);
   const leftRef = useRef<Record<string, HTMLButtonElement | null>>({});
   const rightRef = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -330,7 +352,7 @@ function MatchGame({
   return (
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       {done && !note ? (
-        <StarsEnd stars={rate(correct.current, step.pairs.length, 1000, level.limitMs).stars} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
       ) : (
         <div className="match-board" ref={board}>
           <svg className="match-lines" aria-hidden="true">
@@ -405,7 +427,7 @@ function MemoryGame({
   const [lock, setLock] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
   const missed = useRef(new Set<string>());
-  const { correct, finish } = useFinish(level, muted, onDone);
+  const { correct, finish, shot } = useFinish(level, muted, onDone);
   const done = found.length === step.pairs.length;
 
   function flip(key: string, pair: string) {
@@ -441,7 +463,7 @@ function MemoryGame({
   return (
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       {done && !note ? (
-        <StarsEnd stars={rate(correct.current, step.pairs.length, 1000, level.limitMs).stars} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
       ) : (
         <div className="memory-grid">
           {cards.map((card) => {
@@ -484,9 +506,8 @@ function SortGame({
   const [cursor, setCursor] = useState(0);
   const [shake, setShake] = useState("");
   const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
-  const [stars, setStars] = useState(0);
   const missed = useRef(new Set<string>());
-  const { correct, finish } = useFinish(level, muted, onDone);
+  const { correct, finish, shot } = useFinish(level, muted, onDone);
   const card = cards[cursor];
   const done = cursor >= cards.length;
 
@@ -504,9 +525,7 @@ function SortGame({
     const next = cursor + 1;
     setNote(null);
     setShake("");
-    if (next >= cards.length) {
-      setStars(rate(correct.current, cards.length, 1000, level.limitMs).stars);
-    }
+    if (next >= cards.length) shot();
     setCursor(next);
   }
 
@@ -514,7 +533,7 @@ function SortGame({
     <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
       <b className="swipe-count">{done ? `${correct.current}/${cards.length}` : `${cursor + 1}/${cards.length}`}</b>
       {done ? (
-        <StarsEnd stars={stars} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
+        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "回到地图" : "下一关 →"} />
       ) : note ? (
         <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
       ) : card ? (
