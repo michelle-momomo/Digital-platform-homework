@@ -67,14 +67,14 @@ export const regions: Region[] = [
         limitMs: 40000,
         steps: [
           {
-            kind: "order",
-            prompt: "An idea wants to become a live site. Put the four steps in order.",
-            items: [
-              { id: "design", label: "Design the interface" },
-              { id: "build", label: "Build the working site" },
-              { id: "push", label: "Commit and push to GitHub" },
-              { id: "host", label: "Deploy with Vercel" },
+            kind: "choice",
+            prompt: "An idea wants to become a live site.",
+            options: [
+              { id: "right", label: "Design, then build, push, and host" },
+              { id: "host", label: "Host it before you design" },
+              { id: "push", label: "Push the code before you build" },
             ],
+            answer: "right",
             why: "Design the look, build it, push the code, then connect hosting.",
             source: "Lecture pp. 4, 7, 20, 21",
           },

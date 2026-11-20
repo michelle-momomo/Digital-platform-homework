@@ -23,7 +23,7 @@ function dealOrder(step: OrderStep) {
   return order;
 }
 
-export function PlayView({
+function LegacyPlay({
   region,
   level,
   index,
@@ -614,4 +614,126 @@ function wait(ms: number) {
 
 export function stepKind(step: Step) {
   return step.kind;
+}
+
+export function PlayView(props: {
+  region: Region;
+  level: Level;
+  index: number;
+  muted: boolean;
+  onExit: () => void;
+  onDone: (result: LevelResult) => void;
+}) {
+  if (props.region.id === "vibe" && props.level.id === "pipeline") return <SimpleLevel {...props} />;
+  return <LegacyPlay {...props} />;
+}
+
+function SimpleLevel({
+  level,
+  index,
+  muted,
+  onExit,
+  onDone,
+  region,
+}: {
+  region: Region;
+  level: Level;
+  index: number;
+  muted: boolean;
+  onExit: () => void;
+  onDone: (result: LevelResult) => void;
+}) {
+  const step = level.steps[0];
+  const choice = step?.kind === "choice" ? step : null;
+  const [wrongId, setWrongId] = useState("");
+  const [ok, setOk] = useState(false);
+  const [shake, setShake] = useState("");
+  const missed = useRef(false);
+  const started = useRef(Date.now());
+  const game = useGame();
+  const guide = !ok && !wrongId;
+
+  function pick(id: string) {
+    if (ok || !choice) return;
+    if (id === choice.answer) {
+      setOk(true);
+      setWrongId("");
+      sfx("ok", muted);
+      return;
+    }
+    missed.current = true;
+    setWrongId(id);
+    setShake(id);
+    sfx("bad", muted);
+    window.setTimeout(() => setShake(""), 420);
+  }
+
+  function finish() {
+    if (!choice) return;
+    const ms = Date.now() - started.current;
+    const correct = missed.current ? 0 : 1;
+    const rated = rate(correct, gradedCount(level), ms, level.limitMs, correct);
+    onDone({
+      ...rated,
+      correct,
+      total: gradedCount(level),
+      ms,
+      at: new Date().toISOString(),
+    });
+  }
+
+  if (!choice) return null;
+
+  return (
+    <main className={`sheet theme-${region.id} play`}>
+      <header className="hud">
+        <button className="text-btn" onClick={onExit}>
+          ← Back
+        </button>
+        <span className="level-dots" aria-label={`Level ${index + 1} of ${region.levels.length}`}>
+          {region.levels.map((item, i) => (
+            <i key={item.id} className={i === index ? "now" : i < index ? "done" : ""} />
+          ))}
+        </span>
+      </header>
+      <section className="play-scene">
+        <p className="tap-label">Tap the right answer</p>
+        <div className={`actor ${ok ? "happy" : wrongId ? "sad" : ""}`}>
+          {game.save.character && (
+            <Sprite character={game.save.character} className={ok ? "hop" : "bounce"} />
+          )}
+        </div>
+        <p className="prompt">{choice.prompt}</p>
+        <div className="choices">
+          {guide && <span className="hand" aria-hidden="true">👆</span>}
+          {choice.options.map((option) => (
+            <button
+              key={option.id}
+              className={`tile ${ok && option.id === choice.answer ? "good" : ""} ${wrongId === option.id ? "bad" : ""} ${shake === option.id ? "shake" : ""}`}
+              onClick={() => pick(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {(ok || wrongId) && (
+          <p className={`reveal ${ok ? "yes" : "no"}`} role="status">
+            {choice.why} <span className="src">{choice.source}</span>
+          </p>
+        )}
+        {ok && (
+          <button className="go big" onClick={() => { sfx("fanfare", muted); finish(); }}>
+            Next
+          </button>
+        )}
+        {ok && (
+          <div className="confetti" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => (
+              <span key={i} style={{ left: `${6 + i * 8}%` }} />
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  );
 }
