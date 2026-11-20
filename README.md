@@ -20,12 +20,15 @@ npm run preview
 
 ## What is included
 
-- Three sessions: **Vibe Coding** (LaunchLab, 9 Oct 2026; no individual speaker is named in the lecture), **Agentic AI** (Nick Goh, 30 Oct 2026), and **LinkedIn** (Cindy Leong, 13 Nov 2026).
-- Takeaways sit on the session page. Vibe Coding still has three challenges: reorder a pipeline (drag or buttons), two rounds of task matching, and five launch decisions. Agentic AI has one handoff game. LinkedIn has one hold-or-fold card game.
-- First-attempt scoring: pipeline 1 point, matching 7 points, decisions 5 points. Corrections do not add points. Completion and scores are separate. Retrying replaces the latest result while preserving the personal best.
-- Per-challenge explanations, review suggestions, source pages, and a clearly marked localStorage extra tip.
-- Browser-local scores and unfinished attempts, refresh restoration, defensive data validation, content-version invalidation, and graceful in-memory fallback when storage is blocked.
-- Keyboard navigation, visible focus, native confirmation dialog for reset, mobile controls, and reduced-motion support.
+A pastel world map. Players make a boy or girl pixel pal, then clear three regions of six short levels each. One line of feedback per move. Stars, a mute toggle, and a shareable result card.
+
+- **Vibe Coding · 9 Oct · LaunchLab:** order the ship path, match tools and files, then a launch-day boss.
+- **Agentic AI · 30 Oct · Nick Goh:** hire the six-seat handoff, then run one big client.
+- **LinkedIn · 13 Nov · Cindy Leong:** headlines, names, formats, a hold-or-fold bonus, then See / Think / Respond.
+- Two locked “Coming soon” islands.
+- Optional Google Sheet logging. See `docs/RESULTS_SETUP.md`. `/admin` lists runs when `VITE_ADMIN_PASSCODE` is set.
+
+Progress stays in this browser. A failed log never stops the game.
 
 ## Content and sources
 
