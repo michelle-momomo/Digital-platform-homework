@@ -515,7 +515,6 @@ function AssignPlay({
                 {agent.id === "you" ? "🙂" : agent.id === "buyer" || agent.id === "analyst" ? "📦" : "🤖"}
               </span>
               <b>{agent.label}</b>
-              <small>{agent.note}</small>
               {step.tasks
                 .filter((task) => placed[task.id] === agent.id)
                 .map((task) => (
