@@ -1,54 +1,32 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState } from "react";
 import { Sprite } from "./AvatarView";
-import type { Level, MatchStep, MemoryStep, Region, SortStep, SwipeCard } from "./content";
+import type { ChatStep, Level, MatchStep, MemoryStep, Region, SortStep, SwipeCard } from "./content";
 import { gradedCount } from "./content";
+import { LevelShell, leaveLabel, type Verdict } from "./LevelShell";
 import { rate, starLines } from "./logic";
+import { shuffle } from "./PlayView";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
-import { TimeBonus, TimerTip } from "./timebar";
 import type { LevelResult } from "./storage";
 
-function shuffle<T>(items: T[]) {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-export function MiniLevel(props: {
+type Props = {
   region: Region;
   level: Level;
   index: number;
   muted: boolean;
   onExit: () => void;
   onDone: (result: LevelResult) => void;
-}) {
+};
+
+type Note = { ok: boolean; why: string; source: string };
+
+export function MiniLevel(props: Props) {
   const [ready, setReady] = useState(false);
   const step = props.level.steps[0];
   const learn = props.level.learn;
   if (!step) return null;
-  if (!ready && learn) {
-    return (
-      <Shell region={props.region} level={props.level} index={props.index} onExit={props.onExit} how="Learn, then play">
-        <article className="learn-card">
-          <span className="learn-icon" aria-hidden="true">{learn.icon}</span>
-          <h2>{props.level.title}</h2>
-          <ul>
-            {learn.points.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-          <p className="src">{learn.source}</p>
-          <button className="go big" onClick={() => setReady(true)}>
-            Start game
-          </button>
-        </article>
-      </Shell>
-    );
-  }
-  if (step.kind === "swipe") return <SwipeGame {...props} cards={step.cards} how="Swipe right if true, left if false" />;
+  if (!ready && learn) return <LearnCard {...props} learn={learn} onStart={() => setReady(true)} />;
+  if (step.kind === "swipe") return <SwipeGame {...props} cards={step.cards} />;
   if (step.kind === "match") return <MatchGame {...props} step={step} />;
   if (step.kind === "memory") return <MemoryGame {...props} step={step} />;
   if (step.kind === "sort") return <SortGame {...props} step={step} />;
@@ -56,133 +34,64 @@ export function MiniLevel(props: {
   return null;
 }
 
-function Shell({
+function LearnCard({
   region,
   level,
   index,
   onExit,
-  how,
-  children,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  onExit: () => void;
-  how: string;
-  children: ReactNode;
-}) {
+  learn,
+  onStart,
+}: Props & { learn: NonNullable<Level["learn"]>; onStart: () => void }) {
   const started = useRef(Date.now());
   return (
-    <main className={`sheet theme-${region.id} swipe-play`}>
-      <header className="hud">
-        <button className="text-btn" onClick={onExit}>
-          ← Back
-        </button>
-        <span className="level-dots" aria-label={`Level ${index + 1}`}>
-          {level && region.levels.map((item, i) => (
-            <i key={item.id} className={i === index ? "now" : i < index ? "done" : ""} />
-          ))}
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={started.current}
+      stars={0}
+      combo={0}
+      prompt="Learn, then play"
+      onExit={onExit}
+      verdict={{ kind: "idle", hint: "Read the points, then start the game.", action: { label: "Start game", onClick: onStart } }}
+    >
+      <article className="learn">
+        <span className="learn-icon" aria-hidden="true">
+          {learn.icon}
         </span>
-        <TimeBonus limitMs={level.limitMs} started={started.current} />
-      </header>
-      <TimerTip />
-      <section className="swipe-stage">
-        <p className="swipe-hint">{how}</p>
-        {children}
-      </section>
-    </main>
-  );
-}
-
-function Feedback({
-  ok,
-  why,
-  source,
-  last,
-  onNext,
-  leave = "Next level →",
-}: {
-  ok: boolean;
-  why: string;
-  source: string;
-  last: boolean;
-  onNext: () => void;
-  leave?: string;
-}) {
-  return (
-    <div className={`swipe-feedback result-dock ${ok ? "yes" : "no"}`} role="status">
-      {ok && <Confetti />}
-      <p>
-        {ok ? `Correct! ${why}` : `Not quite ${why}`} <span className="src">{source}</span>
-      </p>
-      <button className="go big" onClick={onNext}>
-        {last ? leave : "Next card"}
-      </button>
-    </div>
-  );
-}
-
-function StarsEnd({
-  stars,
-  onNext,
-  leave = "Next level →",
-  lines,
-}: {
-  stars: number;
-  onNext: () => void;
-  leave?: string;
-  lines?: { label: string; earned: boolean; reason: string }[];
-}) {
-  return (
-    <div className="swipe-end result-dock">
-      <p className="result-bar yes">Correct! {stars}★</p>
-      {lines && (
-        <ul className="star-lines">
-          {lines.map((line) => (
-            <li key={line.label} className={line.earned ? "on" : ""}>
-              {line.earned ? "★" : "☆"} {line.label}: {line.reason}
-            </li>
+        <ul>
+          {learn.points.map((point) => (
+            <li key={point}>{point}</li>
           ))}
         </ul>
-      )}
-      <span className="stars" aria-label={`${stars} stars`}>
-        {[1, 2, 3].map((star) => (
-          <i key={star} className={star <= stars ? "on" : ""} />
-        ))}
-      </span>
-      <button className="go big" onClick={onNext}>
-        {leave}
-      </button>
-    </div>
+        <span className="tag">{learn.source}</span>
+      </article>
+    </LevelShell>
   );
 }
 
-function Confetti() {
-  return (
-    <div className="confetti" aria-hidden="true">
-      {Array.from({ length: 8 }, (_, i) => (
-        <span key={i} style={{ left: `${8 + i * 11}%` }} />
-      ))}
-    </div>
-  );
-}
-
-function useFinish(
-  level: Level,
-  muted: boolean,
-  onDone: (result: LevelResult) => void,
-) {
+/** Scoring shared by the card games: first-try correct count, streak, frozen result. */
+function useScore(level: Level, muted: boolean, onDone: (result: LevelResult) => void) {
   const started = useRef(Date.now());
   const correct = useRef(0);
+  const combo = useRef(0);
   const snap = useRef<null | { stars: 1 | 2 | 3; score: number; ms: number; total: number; lines: ReturnType<typeof starLines> }>(null);
+  const total = gradedCount(level);
+  function streak(ok: boolean) {
+    combo.current = ok ? combo.current + 1 : 0;
+  }
   function shot() {
     if (!snap.current) {
       const ms = Date.now() - started.current;
-      const total = gradedCount(level);
       const rated = rate(correct.current, total, ms, level.limitMs, correct.current);
       snap.current = { ...rated, ms, total, lines: starLines(correct.current, total, ms, level.limitMs) };
     }
     return snap.current;
+  }
+  function live() {
+    if (snap.current) return snap.current.stars;
+    if (correct.current === 0) return 0;
+    return rate(correct.current, total, Date.now() - started.current, level.limitMs, correct.current).stars;
   }
   function finish() {
     const frozen = shot();
@@ -196,44 +105,47 @@ function useFinish(
       at: new Date().toISOString(),
     });
   }
-  return { correct, finish, shot };
+  return { started, correct, combo, streak, finish, shot, live };
 }
 
-function SwipeGame({
-  region,
-  level,
-  index,
-  muted,
-  onExit,
-  onDone,
-  cards,
-  how,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  muted: boolean;
-  onExit: () => void;
-  onDone: (result: LevelResult) => void;
-  cards: SwipeCard[];
-  how: string;
-}) {
+type Score = ReturnType<typeof useScore>;
+
+function noteVerdict(note: Note, label: string, onNext: () => void): Verdict {
+  return note.ok
+    ? { kind: "good", title: "Correct!", text: note.why, tag: note.source, action: { label, onClick: onNext } }
+    : { kind: "bad", text: note.why, tag: note.source, action: { label, onClick: onNext } };
+}
+
+function endVerdict(score: Score, region: Region, index: number, text?: string, tag?: string): Verdict {
+  const frozen = score.shot();
+  return {
+    kind: "good",
+    title: `Correct! +${frozen.stars}★`,
+    text: text ?? `${score.correct.current} of ${frozen.total} right on the first try.`,
+    tag,
+    lines: frozen.lines,
+    action: { label: leaveLabel(region, index), onClick: score.finish },
+  };
+}
+
+function SwipeGame({ region, level, index, muted, onExit, onDone, cards }: Props & { cards: SwipeCard[] }) {
   const [order] = useState(() => shuffle(cards));
   const [cursor, setCursor] = useState(0);
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [fly, setFly] = useState<"" | "left" | "right">("");
-  const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
+  const [note, setNote] = useState<Note | null>(null);
   const origin = useRef(0);
   const dxRef = useRef(0);
-  const { correct, finish, shot } = useFinish(level, muted, onDone);
+  const score = useScore(level, muted, onDone);
   const card = order[cursor];
   const done = cursor >= order.length;
 
   function judge(item: SwipeCard, sayTrue: boolean) {
     if (note || fly) return;
     const ok = sayTrue === item.truth;
-    if (ok) correct.current += 1;
+    if (ok) score.correct.current += 1;
+    score.streak(ok);
     sfx(ok ? "ok" : "bad", muted);
     setFly(sayTrue ? "right" : "left");
     window.setTimeout(() => {
@@ -242,200 +154,182 @@ function SwipeGame({
       setDx(0);
     }, 220);
   }
-
   function advance() {
     const next = cursor + 1;
     setNote(null);
-    if (next >= order.length) shot();
+    if (next >= order.length) score.shot();
     setCursor(next);
   }
 
+  const verdict: Verdict = done
+    ? endVerdict(score, region, index)
+    : note
+      ? noteVerdict(note, "Next card", advance)
+      : { kind: "idle", hint: "Swipe the card, or tap True or False." };
+
   return (
-    <Shell region={region} level={level} index={index} onExit={onExit} how={how}>
-      <b className="swipe-count">{done ? `${correct.current}/${order.length}` : `${cursor + 1}/${order.length}`}</b>
-      {done ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
-      ) : note ? (
-        <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
-      ) : card ? (
-        <>
-          <div className="swipe-stack">
-            <div className="swipe-back two" />
-            <div className="swipe-back one" />
-            <article
-              className={`swipe-card ${dragging ? "drag" : ""} ${fly ? `fly-${fly}` : ""}`}
-              style={{ transform: fly ? undefined : `translateX(${dx}px) rotate(${dx / 18}deg)` }}
-              onPointerDown={(event) => {
-                origin.current = event.clientX;
-                setDragging(true);
-                event.currentTarget.setPointerCapture(event.pointerId);
-              }}
-              onPointerMove={(event) => {
-                if (!dragging) return;
-                const next = event.clientX - origin.current;
-                dxRef.current = next;
-                setDx(next);
-              }}
-              onPointerUp={() => {
-                if (!dragging) return;
-                setDragging(false);
-                const moved = dxRef.current;
-                if (moved > 80) judge(card, true);
-                else if (moved < -80) judge(card, false);
-                else setDx(0);
-              }}
-            >
-              <p>{card.text}</p>
-            </article>
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={score.started.current}
+      stars={score.live()}
+      combo={score.combo.current}
+      prompt="Swipe right if true, left if false"
+      onExit={onExit}
+      verdict={verdict}
+    >
+      <p className="step-count">
+        {done ? `${score.correct.current} of ${order.length} right` : `Card ${cursor + 1} of ${order.length}`}
+      </p>
+      {!done && card && (
+        <div className="swipe">
+          <article
+            className={`swipe-card ${dragging ? "drag" : ""} ${fly ? `fly-${fly}` : ""} ${note ? (note.ok ? "good" : "bad") : ""}`}
+            style={{ transform: fly ? undefined : `translateX(${dx}px) rotate(${dx / 18}deg)` }}
+            onPointerDown={(event) => {
+              if (note) return;
+              origin.current = event.clientX;
+              dxRef.current = 0;
+              setDragging(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (!dragging) return;
+              const next = event.clientX - origin.current;
+              dxRef.current = next;
+              setDx(next);
+            }}
+            onPointerUp={() => {
+              if (!dragging) return;
+              setDragging(false);
+              const moved = dxRef.current;
+              if (moved > 80) judge(card, true);
+              else if (moved < -80) judge(card, false);
+              else setDx(0);
+            }}
+          >
+            <p>{card.text}</p>
+          </article>
+          <div className="pair-buttons">
+            <button type="button" className="btn btn-secondary" disabled={!!note} onClick={() => judge(card, false)}>
+              ✕ False
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={!!note} onClick={() => judge(card, true)}>
+              ✓ True
+            </button>
           </div>
-          <div className="swipe-actions">
-            <button className="candy false" aria-label="False" onClick={() => judge(card, false)}>✕ False</button>
-            <button className="candy true" aria-label="True" onClick={() => judge(card, true)}>✓ True</button>
-          </div>
-        </>
-      ) : null}
-    </Shell>
+        </div>
+      )}
+    </LevelShell>
   );
 }
 
-function MatchGame({
-  region,
-  level,
-  index,
-  muted,
-  onExit,
-  onDone,
-  step,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  muted: boolean;
-  onExit: () => void;
-  onDone: (result: LevelResult) => void;
-  step: MatchStep;
-}) {
+function MatchGame({ region, level, index, muted, onExit, onDone, step }: Props & { step: MatchStep }) {
   const [rights] = useState(() => shuffle(step.pairs));
   const [picked, setPicked] = useState("");
   const [linked, setLinked] = useState<string[]>([]);
-  const [shake, setShake] = useState("");
-  const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
+  const [wrong, setWrong] = useState("");
+  const [note, setNote] = useState<Note | null>(null);
   const missed = useRef(new Set<string>());
-  const { correct, finish, shot } = useFinish(level, muted, onDone);
-  const board = useRef<HTMLDivElement>(null);
-  const leftRef = useRef<Record<string, HTMLButtonElement | null>>({});
-  const rightRef = useRef<Record<string, HTMLButtonElement | null>>({});
+  const score = useScore(level, muted, onDone);
   const done = linked.length === step.pairs.length;
 
   function chooseRight(id: string) {
-    if (!picked || linked.includes(id) || linked.includes(picked)) return;
+    if (note || !picked || linked.includes(id) || linked.includes(picked)) return;
     const ok = id === picked;
     if (ok) {
-      if (!missed.current.has(id)) correct.current += 1;
+      if (!missed.current.has(id)) score.correct.current += 1;
       setLinked((list) => [...list, id]);
-      sfx("ok", muted);
+      setWrong("");
     } else {
       missed.current.add(picked);
-      setShake(id);
-      sfx("bad", muted);
-      window.setTimeout(() => setShake(""), 400);
+      setWrong(id);
     }
+    score.streak(ok);
+    sfx(ok ? "ok" : "bad", muted);
     const pair = step.pairs.find((item) => item.id === (ok ? id : picked)) ?? step.pairs[0];
     setNote({ ok, why: pair.why, source: pair.source });
     setPicked("");
   }
+  function advance() {
+    setNote(null);
+    setWrong("");
+    if (done) score.shot();
+  }
 
-  const lines = linked.map((id) => {
-    const box = board.current?.getBoundingClientRect();
-    const left = leftRef.current[id]?.getBoundingClientRect();
-    const right = rightRef.current[id]?.getBoundingClientRect();
-    if (!box || !left || !right) return null;
-    return { id, x1: left.right - box.left, y1: left.top + left.height / 2 - box.top, x2: right.left - box.left, y2: right.top + right.height / 2 - box.top };
-  });
+  const verdict: Verdict =
+    done && !note
+      ? endVerdict(score, region, index)
+      : note
+        ? noteVerdict(note, done ? "See result" : "Next pair", advance)
+        : { kind: "idle", hint: picked ? "Now tap its match on the right." : "Tap an item on the left, then its match." };
 
   return (
-    <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
-      {done && !note ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
-      ) : (
-        <div className="match-board" ref={board}>
-          <svg className="match-lines" aria-hidden="true">
-            {lines.map((line) => line && <line key={line.id} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />)}
-          </svg>
-          <div className="match-col">
-            {step.pairs.map((pair) => (
-              <button
-                key={pair.id}
-                ref={(node) => { leftRef.current[pair.id] = node; }}
-                className={`candy ${picked === pair.id ? "on" : ""} ${linked.includes(pair.id) ? "good" : ""}`}
-                disabled={linked.includes(pair.id)}
-                onClick={() => setPicked(pair.id)}
-              >
-                {pair.left}
-              </button>
-            ))}
-          </div>
-          <div className="match-col">
-            {rights.map((pair) => (
-              <button
-                key={pair.id}
-                ref={(node) => { rightRef.current[pair.id] = node; }}
-                className={`candy ${linked.includes(pair.id) ? "good" : ""} ${shake === pair.id ? "shake" : ""}`}
-                disabled={linked.includes(pair.id)}
-                onClick={() => chooseRight(pair.id)}
-              >
-                {pair.right}
-              </button>
-            ))}
-          </div>
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={score.started.current}
+      stars={score.live()}
+      combo={score.combo.current}
+      prompt={step.how}
+      onExit={onExit}
+      verdict={verdict}
+    >
+      <div className="match">
+        <div className="match-col">
+          {step.pairs.map((pair) => (
+            <button
+              type="button"
+              key={pair.id}
+              className={`opt ${linked.includes(pair.id) ? "good" : picked === pair.id ? "picked" : ""}`}
+              aria-pressed={picked === pair.id}
+              disabled={linked.includes(pair.id) || !!note}
+              onClick={() => setPicked(pair.id)}
+            >
+              {pair.left}
+            </button>
+          ))}
         </div>
-      )}
-      {note && (
-        <Feedback
-          ok={note.ok}
-          why={note.why}
-          source={note.source}
-          last={done}
-          onNext={() => setNote(null)}
-        />
-      )}
-    </Shell>
+        <div className="match-col">
+          {rights.map((pair) => (
+            <button
+              type="button"
+              key={pair.id}
+              className={`opt ${linked.includes(pair.id) ? "good" : wrong === pair.id ? "bad" : ""}`}
+              disabled={linked.includes(pair.id) || !!note}
+              onClick={() => chooseRight(pair.id)}
+            >
+              {pair.right}
+            </button>
+          ))}
+        </div>
+      </div>
+    </LevelShell>
   );
 }
 
-function MemoryGame({
-  region,
-  level,
-  index,
-  muted,
-  onExit,
-  onDone,
-  step,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  muted: boolean;
-  onExit: () => void;
-  onDone: (result: LevelResult) => void;
-  step: MemoryStep;
-}) {
+function MemoryGame({ region, level, index, muted, onExit, onDone, step }: Props & { step: MemoryStep }) {
   const [cards] = useState(() =>
-    shuffle(step.pairs.flatMap((pair) => [
-      { key: `${pair.id}-a`, pair: pair.id, text: pair.a },
-      { key: `${pair.id}-b`, pair: pair.id, text: pair.b },
-    ])),
+    shuffle(
+      step.pairs.flatMap((pair) => [
+        { key: `${pair.id}-a`, pair: pair.id, text: pair.a },
+        { key: `${pair.id}-b`, pair: pair.id, text: pair.b },
+      ]),
+    ),
   );
   const [up, setUp] = useState<string[]>([]);
   const [found, setFound] = useState<string[]>([]);
+  const [bad, setBad] = useState<string[]>([]);
   const [lock, setLock] = useState(false);
-  const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
+  const [note, setNote] = useState<Note | null>(null);
   const missed = useRef(new Set<string>());
-  const { correct, finish, shot } = useFinish(level, muted, onDone);
+  const score = useScore(level, muted, onDone);
   const done = found.length === step.pairs.length;
 
   function flip(key: string, pair: string) {
-    if (lock || found.includes(pair) || up.includes(key) || up.length === 2) return;
+    if (note || lock || found.includes(pair) || up.includes(key) || up.length === 2) return;
     const next = [...up, key];
     setUp(next);
     if (next.length < 2) return;
@@ -443,8 +337,9 @@ function MemoryGame({
     const ok = first.pair === second.pair;
     const info = step.pairs.find((item) => item.id === first.pair) ?? step.pairs[0];
     setLock(true);
+    score.streak(ok);
     if (ok) {
-      if (!missed.current.has(first.pair)) correct.current += 1;
+      if (!missed.current.has(first.pair)) score.correct.current += 1;
       sfx("ok", muted);
       window.setTimeout(() => {
         setFound((list) => [...list, first.pair]);
@@ -456,168 +351,180 @@ function MemoryGame({
       missed.current.add(first.pair);
       missed.current.add(second.pair);
       sfx("bad", muted);
+      setBad(next);
       window.setTimeout(() => {
-        setUp([]);
         setLock(false);
         setNote({ ok: false, why: info.why, source: info.source });
-      }, 700);
+      }, 500);
     }
   }
+  function advance() {
+    setNote(null);
+    setUp([]);
+    setBad([]);
+    if (done) score.shot();
+  }
+
+  const verdict: Verdict =
+    done && !note
+      ? endVerdict(score, region, index)
+      : note
+        ? noteVerdict(note, done ? "See result" : "Next pair", advance)
+        : { kind: "idle", hint: "Flip two cards to find a pair." };
 
   return (
-    <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
-      {done && !note ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
-      ) : (
-        <div className="memory-grid">
-          {cards.map((card) => {
-            const open = up.includes(card.key) || found.includes(card.pair);
-            return (
-              <button
-                key={card.key}
-                className={`mem ${open ? "open" : ""} ${found.includes(card.pair) ? "good" : ""}`}
-                onClick={() => flip(card.key, card.pair)}
-              >
-                {open ? card.text : "?"}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {note && <Feedback ok={note.ok} why={note.why} source={note.source} last={done} onNext={() => setNote(null)} />}
-    </Shell>
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={score.started.current}
+      stars={score.live()}
+      combo={score.combo.current}
+      prompt={step.how}
+      onExit={onExit}
+      verdict={verdict}
+    >
+      <div className="memory">
+        {cards.map((card) => {
+          const open = up.includes(card.key) || found.includes(card.pair);
+          const state = found.includes(card.pair) ? "good" : bad.includes(card.key) ? "bad" : open ? "open" : "";
+          return (
+            <button
+              type="button"
+              key={card.key}
+              className={`opt mem ${state}`}
+              aria-label={open ? card.text : "Hidden card"}
+              onClick={() => flip(card.key, card.pair)}
+            >
+              {open ? card.text : "?"}
+            </button>
+          );
+        })}
+      </div>
+    </LevelShell>
   );
 }
 
-function SortGame({
-  region,
-  level,
-  index,
-  muted,
-  onExit,
-  onDone,
-  step,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  muted: boolean;
-  onExit: () => void;
-  onDone: (result: LevelResult) => void;
-  step: SortStep;
-}) {
+function SortGame({ region, level, index, muted, onExit, onDone, step }: Props & { step: SortStep }) {
   const [cards] = useState(() => shuffle(step.cards));
   const [cursor, setCursor] = useState(0);
-  const [shake, setShake] = useState("");
-  const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
+  const [note, setNote] = useState<Note | null>(null);
   const missed = useRef(new Set<string>());
-  const { correct, finish, shot } = useFinish(level, muted, onDone);
+  const score = useScore(level, muted, onDone);
   const card = cards[cursor];
   const done = cursor >= cards.length;
 
   function drop(basket: "left" | "right") {
     if (!card || note) return;
     const ok = card.basket === basket;
-    if (ok && !missed.current.has(card.id)) correct.current += 1;
+    if (ok && !missed.current.has(card.id)) score.correct.current += 1;
     if (!ok) missed.current.add(card.id);
+    score.streak(ok);
     sfx(ok ? "ok" : "bad", muted);
-    setShake(ok ? "" : basket);
     setNote({ ok, why: card.why, source: card.source });
   }
-
   function advance() {
     const next = cursor + 1;
     setNote(null);
-    setShake("");
-    if (next >= cards.length) shot();
+    if (next >= cards.length) score.shot();
     setCursor(next);
   }
 
+  const verdict: Verdict = done
+    ? endVerdict(score, region, index)
+    : note
+      ? noteVerdict(note, "Next card", advance)
+      : { kind: "idle", hint: "Tap the basket this card belongs in." };
+
   return (
-    <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
-      <b className="swipe-count">{done ? `${correct.current}/${cards.length}` : `${cursor + 1}/${cards.length}`}</b>
-      {done ? (
-        <StarsEnd stars={shot().stars} lines={shot().lines} onNext={finish} leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"} />
-      ) : note ? (
-        <Feedback ok={note.ok} why={note.why} source={note.source} last={false} onNext={advance} />
-      ) : card ? (
-        <>
-          <article className="sort-card"><p>{card.text}</p></article>
-          <div className="swipe-actions">
-            <button className={`candy ${shake === "left" ? "shake bad" : ""}`} onClick={() => drop("left")}>{step.left}</button>
-            <button className={`candy ${shake === "right" ? "shake bad" : ""}`} onClick={() => drop("right")}>{step.right}</button>
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={score.started.current}
+      stars={score.live()}
+      combo={score.combo.current}
+      prompt={step.how}
+      onExit={onExit}
+      verdict={verdict}
+    >
+      <p className="step-count">
+        {done ? `${score.correct.current} of ${cards.length} right` : `Card ${cursor + 1} of ${cards.length}`}
+      </p>
+      {!done && card && (
+        <div className="swipe">
+          <article className={`swipe-card ${note ? (note.ok ? "good" : "bad") : ""}`}>
+            <p>{card.text}</p>
+          </article>
+          <div className="pair-buttons">
+            <button type="button" className="btn btn-secondary" disabled={!!note} onClick={() => drop("left")}>
+              {step.left}
+            </button>
+            <button type="button" className="btn btn-secondary" disabled={!!note} onClick={() => drop("right")}>
+              {step.right}
+            </button>
           </div>
-        </>
-      ) : null}
-    </Shell>
+        </div>
+      )}
+    </LevelShell>
   );
 }
 
-function ChatGame({
-  region,
-  level,
-  index,
-  muted,
-  onExit,
-  onDone,
-  step,
-}: {
-  region: Region;
-  level: Level;
-  index: number;
-  muted: boolean;
-  onExit: () => void;
-  onDone: (result: LevelResult) => void;
-  step: { kind: "chat"; how: string; says: string; replies: { id: string; text: string; ok: boolean; why: string; source: string }[] };
-}) {
+function ChatGame({ region, level, index, muted, onExit, onDone, step }: Props & { step: ChatStep }) {
   const [replies] = useState(() => shuffle(step.replies));
   const [picked, setPicked] = useState("");
-  const [shake, setShake] = useState("");
-  const [note, setNote] = useState<{ ok: boolean; why: string; source: string } | null>(null);
   const missed = useRef(false);
   const game = useGame();
-  const { correct, finish } = useFinish(level, muted, onDone);
-  const solved = Boolean(picked && step.replies.find((item) => item.id === picked)?.ok);
+  const score = useScore(level, muted, onDone);
+  const reply = step.replies.find((item) => item.id === picked);
+  const solved = !!reply?.ok;
 
   function choose(id: string) {
     if (solved) return;
-    const reply = step.replies.find((item) => item.id === id)!;
-    if (!reply.ok) missed.current = true;
-    else if (!missed.current) correct.current = 1;
-    else correct.current = 0;
-    sfx(reply.ok ? "ok" : "bad", muted);
+    const next = step.replies.find((item) => item.id === id)!;
+    if (!next.ok) missed.current = true;
+    else score.correct.current = missed.current ? 0 : 1;
+    score.streak(next.ok);
+    sfx(next.ok ? "ok" : "bad", muted);
     setPicked(id);
-    setShake(reply.ok ? "" : id);
-    setNote({ ok: reply.ok, why: reply.why, source: reply.source });
+    if (next.ok) score.shot();
   }
 
+  const verdict: Verdict = solved
+    ? endVerdict(score, region, index, reply!.why, reply!.source)
+    : reply
+      ? { kind: "bad", text: reply.why, tag: reply.source, action: { label: "Try again", onClick: () => setPicked("") } }
+      : { kind: "idle", hint: "Tap the reply you would send." };
+
   return (
-    <Shell region={region} level={level} index={index} onExit={onExit} how={step.how}>
-      <div className="chat-row">
-        {game.save.character && <Sprite character={game.save.character} className="bounce" label="" />}
-        <p className="chat-says">{step.says}</p>
+    <LevelShell
+      region={region}
+      level={level}
+      index={index}
+      started={score.started.current}
+      stars={score.live()}
+      combo={score.combo.current}
+      prompt={step.how}
+      onExit={onExit}
+      verdict={verdict}
+    >
+      <div className="chat-says">
+        {game.save.character && <Sprite character={game.save.character} className="chat-pal" label="" />}
+        <p>{step.says}</p>
       </div>
-      <div className="chat-replies">
-        {replies.map((reply) => (
-          <button
-            key={reply.id}
-            className={`candy ${picked === reply.id && reply.ok ? "good" : ""} ${shake === reply.id ? "shake bad" : ""}`}
-            onClick={() => choose(reply.id)}
-          >
-            {reply.text}
-          </button>
-        ))}
+      <div className={`opts ${solved ? "locked" : ""}`}>
+        {replies.map((item, i) => {
+          const state = solved ? (item.id === picked ? "good" : "dim") : item.id === picked ? "bad" : "";
+          return (
+            <button type="button" key={item.id} className={`opt ${state}`} disabled={solved} onClick={() => choose(item.id)}>
+              <span className="key" aria-hidden="true">
+                {String.fromCharCode(65 + i)}
+              </span>
+              {item.text}
+            </button>
+          );
+        })}
       </div>
-      {note && (
-        <Feedback
-          ok={note.ok}
-          why={note.why}
-          source={note.source}
-          last={solved}
-          leave={index === region.levels.length - 1 ? "Back to map" : "Next level →"}
-          onNext={solved ? finish : () => setNote(null)}
-        />
-      )}
-    </Shell>
+    </LevelShell>
   );
 }

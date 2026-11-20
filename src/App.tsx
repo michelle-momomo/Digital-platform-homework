@@ -6,6 +6,8 @@ import { useGame, StoreProvider } from "./store";
 import { levelKey } from "./storage";
 import "./tokens.css";
 import "./styles.css";
+import "./buttons.css";
+import "./level.css";
 
 function Shell() {
   const { path, go } = useRoute();
