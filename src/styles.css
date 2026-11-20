@@ -184,6 +184,8 @@ input, select {
 .chip.smoke { animation: puff 0.5s ease; background: #ece8ee; }
 @keyframes puff { 50% { transform: translateY(-4px); opacity: 0.5; } }
 .choices button.good, .tasks button.picked { background: #d8f3e4; }
+.tasks button.picked { transform: translateY(-4px); outline: 3px solid #f4a4c4; box-shadow: 0 12px 0 #f6e3ea; }
+.agent.placeable { outline: 2px dashed #f4a4c4; animation: blink 1s steps(2) infinite; }
 .choices button.bad { background: #ffe1d6; }
 .cards { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 .cards p { font-size: 13px; min-height: 64px; }

@@ -445,6 +445,13 @@ function AssignPlay({
   const [cleared, setCleared] = useState(false);
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const dragging = useRef("");
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelected("");
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   function lift(taskId: string) {
     setPlaced((prev) => {
       const next = { ...prev };
@@ -493,7 +500,7 @@ function AssignPlay({
               tabIndex={0}
               data-agent={agent.id}
               aria-label={`Desk ${agent.label}`}
-              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""}`}
+              className={`agent ${jam && placed[jam] === agent.id ? "shake" : ""} ${cursor >= 0 && step.tasks[cursor]?.agent === agent.id ? "lit" : ""} ${selected || ghost ? "placeable" : ""}`}
               style={{ ["--seat" as string]: color }}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {
@@ -561,7 +568,7 @@ function AssignPlay({
               dragging.current = "";
               setGhost(null);
             }}
-            onClick={() => setSelected(task.id)}
+            onClick={() => setSelected((current) => (current === task.id ? "" : task.id))}
           >
             <span className="ico" aria-hidden="true">{iconFor(task.label)}</span>
             {task.label}

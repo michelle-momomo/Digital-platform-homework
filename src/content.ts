@@ -123,7 +123,7 @@ export const regions: Region[] = [
         steps: [
           {
             kind: "assign",
-            prompt: "Drop each job on the tool that actually does it.",
+            prompt: "Drag or tap each job onto the tool that does it.",
             agents: [
               { id: "github", label: "GitHub", note: "Files and history" },
               { id: "vercel", label: "Vercel", note: "Build and host" },
