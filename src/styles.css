@@ -415,6 +415,24 @@ h1, .go, .banner b { font-family: Fredoka, Nunito, sans-serif; }
 .session.baby { background: #c5e4f7; }
 .session.mist { background: #e4e0e8; color: #6d6278; }
 .cover-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+.creator-actions { display: grid; justify-items: center; gap: 8px; margin-top: 14px; }
+.primary-wrap { display: inline-block; }
+.go.primary { background: #f8c8dc; color: #4a3f55; min-width: 200px; }
+.go.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.35);
+}
+.go.primary:disabled:hover,
+.go.primary:disabled:active { transform: none; box-shadow: 0 8px 0 #e7a9c2; }
+.name-hint { margin: 0; font-size: 13px; font-weight: 800; color: #8a7896; }
+.name-me { font-weight: 800; }
+.shake-input { animation: nameshake 0.3s linear; }
+@keyframes nameshake {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
 @media (max-width: 720px) {
   .cover-art { height: 200px; }
   .cover-pals .sprite { width: 72px; }

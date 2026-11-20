@@ -37,7 +37,19 @@ export function Creator({
       : hairsFor(gender)[0].id;
     setDraft({ ...draft, gender, hair });
   }
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [nameShake, setNameShake] = useState(false);
   const ready = draft.name.trim().length > 0 && draft.name.trim().length <= 20;
+  function focusName() {
+    nameRef.current?.focus();
+    nameRef.current?.scrollIntoView({ block: "center" });
+  }
+  function pokeDisabled() {
+    if (ready) return;
+    focusName();
+    setNameShake(true);
+    window.setTimeout(() => setNameShake(false), 300);
+  }
   function randomize() {
     const gender: Gender = Math.random() < 0.5 ? "girl" : "boy";
     const options = hairsFor(gender);
@@ -59,7 +71,9 @@ export function Creator({
         <div className="pedestal">
           <span className="spark">✦</span>
           <Sprite character={draft} className="bounce big" label="Your avatar preview" />
-          <p>{draft.name.trim() || "Name me"}</p>
+          <button type="button" className="text-btn name-me" onClick={focusName}>
+            {draft.name.trim() || "Name me"}
+          </button>
         </div>
         <form
           onSubmit={(event) => {
@@ -116,8 +130,10 @@ export function Creator({
           <label>
             Name
             <input
+              ref={nameRef}
               required
               maxLength={20}
+              className={nameShake ? "shake-input" : ""}
               value={draft.name}
               placeholder="Your name"
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
@@ -132,12 +148,15 @@ export function Creator({
               onChange={(event) => setDraft({ ...draft, studentId: event.target.value })}
             />
           </label>
-          <div className="row center">
+          <div className="creator-actions">
+            <span className="primary-wrap" onClick={pokeDisabled}>
+              <button className="go big primary" type="submit" disabled={!ready}>
+                Start adventure
+              </button>
+            </span>
+            {!ready && <p className="name-hint">先给你的小人起个名字</p>}
             <button className="ghost" type="button" onClick={randomize}>
               Randomize
-            </button>
-            <button className="go big" type="submit" disabled={!ready}>
-              Start adventure
             </button>
             {onCancel && (
               <button className="text-btn" type="button" onClick={onCancel}>
