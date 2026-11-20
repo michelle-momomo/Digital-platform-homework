@@ -355,105 +355,105 @@ function MapArt() {
     <svg className="map-art" viewBox="0 0 1000 1100" aria-hidden="true">
       <defs>
         <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
-          <circle cx="3" cy="3" r="1.4" fill="#F6D5E2" />
+          <circle cx="3" cy="3" r="1.4" fill="var(--art-dot)" />
         </pattern>
       </defs>
-      <rect width="1000" height="760" rx="40" fill="#FFF6EE" />
+      <rect width="1000" height="760" rx="40" fill="var(--art-sea)" />
       <rect width="1000" height="760" rx="40" fill="url(#dots)" />
       <g className="drift">
-        <ellipse cx="120" cy="70" rx="36" ry="14" fill="#fff" />
-        <ellipse cx="146" cy="74" rx="22" ry="12" fill="#fff" />
-        <ellipse cx="820" cy="120" rx="40" ry="16" fill="#fff" />
-        <ellipse cx="860" cy="128" rx="24" ry="12" fill="#fff" />
+        <ellipse cx="120" cy="70" rx="36" ry="14" fill="var(--surface)" />
+        <ellipse cx="146" cy="74" rx="22" ry="12" fill="var(--surface)" />
+        <ellipse cx="820" cy="120" rx="40" ry="16" fill="var(--surface)" />
+        <ellipse cx="860" cy="128" rx="24" ry="12" fill="var(--surface)" />
       </g>
-      <path d="M240 620 C 320 420, 380 340, 500 250" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
-      <path d="M540 250 C 640 300, 700 420, 760 620" fill="none" stroke="#E7B7CC" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
-      <path d="M250 700 C 260 820, 280 900, 300 960" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
-      <path d="M760 700 C 750 820, 740 900, 720 960" fill="none" stroke="#DDD4E2" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
-      <circle cx="90" cy="150" r="5" fill="#F8C8DC" />
-      <circle cx="930" cy="80" r="6" fill="#FFF3B0" />
-      <circle cx="860" cy="200" r="4" fill="#C5E4F7" />
+      <path d="M240 620 C 320 420, 380 340, 500 250" fill="none" stroke="var(--art-trail)" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
+      <path d="M540 250 C 640 300, 700 420, 760 620" fill="none" stroke="var(--art-trail)" strokeWidth="7" strokeDasharray="3 14" strokeLinecap="round" />
+      <path d="M250 700 C 260 820, 280 900, 300 960" fill="none" stroke="var(--art-trail-muted)" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
+      <path d="M760 700 C 750 820, 740 900, 720 960" fill="none" stroke="var(--art-trail-muted)" strokeWidth="7" strokeDasharray="3 16" strokeLinecap="round" />
+      <circle cx="90" cy="150" r="5" fill="var(--art-blush)" />
+      <circle cx="930" cy="80" r="6" fill="var(--art-butter)" />
+      <circle cx="860" cy="200" r="4" fill="var(--isle-sky)" />
     </svg>
   );
 }
 
 function IslandArt({ region, stars }: { region: Region; stars: number }) {
-  const grass = region.locked ? "#E4E0E8" : region.color;
-  const cliff = region.locked ? "#C8C2CE" : "#E7C3A8";
+  const grass = region.locked ? "var(--art-locked)" : region.color;
+  const cliff = region.locked ? "var(--art-locked-deep)" : "var(--art-cliff)";
   const dots = region.levels.map((_, i) => dotAt(i, region.levels.length));
   const done = region.levels.map((_, i) => stars >= (i + 1) * 3);
   return (
     <svg viewBox="0 0 340 240" className="island-art" aria-hidden="true">
-      <ellipse cx="70" cy="36" rx="22" ry="10" fill="#fff" opacity="0.9" />
-      <ellipse cx="88" cy="40" rx="14" ry="8" fill="#fff" />
-      <ellipse cx="270" cy="28" rx="26" ry="11" fill="#fff" opacity="0.85" />
+      <ellipse cx="70" cy="36" rx="22" ry="10" fill="var(--surface)" opacity="0.9" />
+      <ellipse cx="88" cy="40" rx="14" ry="8" fill="var(--surface)" />
+      <ellipse cx="270" cy="28" rx="26" ry="11" fill="var(--surface)" opacity="0.85" />
       <path d="M28 118 C 8 168, 40 214, 170 222 C 300 230, 338 176, 318 124 C 340 86, 286 48, 176 42 C 70 36, 40 70, 28 118 Z" fill={cliff} />
       <path d="M40 108 C 26 156, 58 196, 170 202 C 286 208, 322 160, 304 114 C 322 80, 274 52, 176 48 C 82 44, 50 68, 40 108 Z" fill={grass} />
-      <ellipse cx="118" cy="78" rx="48" ry="16" fill="#fff" opacity="0.28" />
+      <ellipse cx="118" cy="78" rx="48" ry="16" fill="var(--surface)" opacity="0.28" />
       {!region.locked && (
         <>
-          <ellipse cx="78" cy="150" rx="22" ry="10" fill="#9FD4F2" />
-          <ellipse cx="74" cy="148" rx="6" ry="3" fill="#DFF3C8" />
-          <path d="M108 156 q10 -10 20 0 q10 -10 20 0" fill="none" stroke="#C68642" strokeWidth="3" />
-          <path d="M108 160 q10 8 20 0 q10 8 20 0" fill="none" stroke="#E7C3A8" strokeWidth="3" />
+          <ellipse cx="78" cy="150" rx="22" ry="10" fill="var(--art-pond)" />
+          <ellipse cx="74" cy="148" rx="6" ry="3" fill="var(--art-lily)" />
+          <path d="M108 156 q10 -10 20 0 q10 -10 20 0" fill="none" stroke="var(--art-wood)" strokeWidth="3" />
+          <path d="M108 160 q10 8 20 0 q10 8 20 0" fill="none" stroke="var(--art-cliff)" strokeWidth="3" />
           <g>
-            <rect x="46" y="118" width="5" height="18" fill="#C68642" />
-            <circle cx="48" cy="112" r="12" fill="#7DCEA0" />
-            <circle cx="40" cy="116" r="8" fill="#8ED6B0" />
-            <rect x="250" y="128" width="5" height="16" fill="#C68642" />
-            <circle cx="252" cy="122" r="11" fill="#6FCF97" />
-            <rect x="292" y="150" width="4" height="14" fill="#C68642" />
-            <circle cx="294" cy="146" r="9" fill="#7DCEA0" />
+            <rect x="46" y="118" width="5" height="18" fill="var(--art-wood)" />
+            <circle cx="48" cy="112" r="12" fill="var(--art-leaf)" />
+            <circle cx="40" cy="116" r="8" fill="var(--art-leaf-light)" />
+            <rect x="250" y="128" width="5" height="16" fill="var(--art-wood)" />
+            <circle cx="252" cy="122" r="11" fill="var(--art-leaf-bright)" />
+            <rect x="292" y="150" width="4" height="14" fill="var(--art-wood)" />
+            <circle cx="294" cy="146" r="9" fill="var(--art-leaf)" />
           </g>
-          <circle cx="210" cy="168" r="5" fill="#F4A4C4" />
-          <circle cx="224" cy="162" r="4" fill="#FFF3B0" />
-          <circle cx="236" cy="174" r="3.5" fill="#F08A74" />
-          <circle cx="130" cy="176" r="4" fill="#fff" />
-          <circle cx="142" cy="170" r="3" fill="#F8C8DC" />
-          <rect x="168" y="186" width="10" height="6" rx="3" fill="#F08A74" />
-          <rect x="172" y="180" width="2" height="6" fill="#fff" />
+          <circle cx="210" cy="168" r="5" fill="var(--pink)" />
+          <circle cx="224" cy="162" r="4" fill="var(--art-butter)" />
+          <circle cx="236" cy="174" r="3.5" fill="var(--art-coral)" />
+          <circle cx="130" cy="176" r="4" fill="var(--surface)" />
+          <circle cx="142" cy="170" r="3" fill="var(--art-blush)" />
+          <rect x="168" y="186" width="10" height="6" rx="3" fill="var(--art-coral)" />
+          <rect x="172" y="180" width="2" height="6" fill="var(--surface)" />
         </>
       )}
       {region.locked && (
         <g opacity="0.85">
-          <ellipse cx="170" cy="120" rx="70" ry="28" fill="#fff" />
-          <rect x="154" y="112" width="32" height="22" rx="5" fill="#fff" />
-          <path d="M160 112 v-8 a14 14 0 0 1 20 0 v8" fill="none" stroke="#8A7896" strokeWidth="3" />
+          <ellipse cx="170" cy="120" rx="70" ry="28" fill="var(--surface)" />
+          <rect x="154" y="112" width="32" height="22" rx="5" fill="var(--surface)" />
+          <path d="M160 112 v-8 a14 14 0 0 1 20 0 v8" fill="none" stroke="var(--muted)" strokeWidth="3" />
         </g>
       )}
       {region.landmark === "rocket" && (
         <g transform="translate(146 18) scale(2.4)">
-          <rect x="8" y="0" width="6" height="6" fill="#F08A74" />
-          <rect x="6" y="6" width="10" height="18" fill="#fff" />
-          <rect x="9" y="12" width="4" height="4" fill="#8EC8F5" />
-          <rect x="4" y="20" width="4" height="6" fill="#F4A4C4" />
-          <rect x="14" y="20" width="4" height="6" fill="#F4A4C4" />
-          <rect x="9" y="24" width="4" height="6" fill="#FFF3B0" />
+          <rect x="8" y="0" width="6" height="6" fill="var(--art-coral)" />
+          <rect x="6" y="6" width="10" height="18" fill="var(--surface)" />
+          <rect x="9" y="12" width="4" height="4" fill="var(--art-sky-deep)" />
+          <rect x="4" y="20" width="4" height="6" fill="var(--pink)" />
+          <rect x="14" y="20" width="4" height="6" fill="var(--pink)" />
+          <rect x="9" y="24" width="4" height="6" fill="var(--art-butter)" />
         </g>
       )}
       {region.landmark === "robot" && (
         <g transform="translate(138 22) scale(2.3)">
-          <rect x="10" y="0" width="4" height="6" fill="#7A6B86" />
-          <rect x="2" y="6" width="20" height="16" rx="3" fill="#fff" />
-          <rect x="7" y="11" width="3" height="3" fill="#3A3148" />
-          <rect x="14" y="11" width="3" height="3" fill="#3A3148" />
-          <rect x="4" y="22" width="16" height="12" rx="2" fill="#C5B3F5" />
+          <rect x="10" y="0" width="4" height="6" fill="var(--art-metal)" />
+          <rect x="2" y="6" width="20" height="16" rx="3" fill="var(--surface)" />
+          <rect x="7" y="11" width="3" height="3" fill="var(--art-dark)" />
+          <rect x="14" y="11" width="3" height="3" fill="var(--art-dark)" />
+          <rect x="4" y="22" width="16" height="12" rx="2" fill="var(--art-lavender)" />
         </g>
       )}
       {region.landmark === "tower" && (
         <g transform="translate(142 8) scale(2.2)">
-          <rect x="8" y="14" width="14" height="36" fill="#fff" />
-          <rect x="11" y="20" width="4" height="7" fill="#8EC8F5" />
-          <rect x="11" y="32" width="4" height="7" fill="#8EC8F5" />
-          <rect x="24" y="6" width="22" height="16" rx="8" fill="#fff" />
-          <rect x="29" y="11" width="12" height="4" fill="#F4A4C4" />
+          <rect x="8" y="14" width="14" height="36" fill="var(--surface)" />
+          <rect x="11" y="20" width="4" height="7" fill="var(--art-sky-deep)" />
+          <rect x="11" y="32" width="4" height="7" fill="var(--art-sky-deep)" />
+          <rect x="24" y="6" width="22" height="16" rx="8" fill="var(--surface)" />
+          <rect x="29" y="11" width="12" height="4" fill="var(--pink)" />
         </g>
       )}
       {!region.locked && (
         <polyline
           points={dots.map((dot) => `${dot.x},${dot.y}`).join(" ")}
           fill="none"
-          stroke="#fff"
+          stroke="var(--surface)"
           strokeWidth="6"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -462,29 +462,29 @@ function IslandArt({ region, stars }: { region: Region; stars: number }) {
       {!region.locked &&
         dots.map((dot, i) => (
           <g key={i} pointerEvents="none" opacity="0.55">
-            <circle cx={dot.x} cy={dot.y} r="11" fill={done[i] ? "#F2C14E" : "#fff"} stroke="#4A3B55" strokeWidth="1.6" />
-            <text x={dot.x} y={dot.y + 3.5} textAnchor="middle" fontSize="11" fontWeight="800" fill="#4A3B55">
+            <circle cx={dot.x} cy={dot.y} r="11" fill={done[i] ? "var(--yellow)" : "var(--surface)"} stroke="var(--ink)" strokeWidth="1.6" />
+            <text x={dot.x} y={dot.y + 3.5} textAnchor="middle" fontSize="11" fontWeight="800" fill="var(--ink)">
               {i + 1}
             </text>
           </g>
         ))}
       {!region.locked && (
         <g transform="translate(292 158)">
-          <rect x="0" y="0" width="3" height="28" fill="#4A3B55" />
-          <rect x="3" y="2" width="18" height="12" fill="#fff" />
-          <rect x="3" y="2" width="4.5" height="4" fill="#4A3B55" />
-          <rect x="12" y="2" width="4.5" height="4" fill="#4A3B55" />
-          <rect x="7.5" y="6" width="4.5" height="4" fill="#4A3B55" />
-          <rect x="16.5" y="6" width="4.5" height="4" fill="#4A3B55" />
-          <rect x="3" y="10" width="4.5" height="4" fill="#4A3B55" />
-          <rect x="12" y="10" width="4.5" height="4" fill="#4A3B55" />
+          <rect x="0" y="0" width="3" height="28" fill="var(--ink)" />
+          <rect x="3" y="2" width="18" height="12" fill="var(--surface)" />
+          <rect x="3" y="2" width="4.5" height="4" fill="var(--ink)" />
+          <rect x="12" y="2" width="4.5" height="4" fill="var(--ink)" />
+          <rect x="7.5" y="6" width="4.5" height="4" fill="var(--ink)" />
+          <rect x="16.5" y="6" width="4.5" height="4" fill="var(--ink)" />
+          <rect x="3" y="10" width="4.5" height="4" fill="var(--ink)" />
+          <rect x="12" y="10" width="4.5" height="4" fill="var(--ink)" />
         </g>
       )}
     </svg>
   );
 }
 
-const NODE_COLORS = ["#B7E4C7", "#FFCDB2", "#D9C7F0", "#C5E4F7", "#FFF3B0", "#F8C8DC"];
+const NODE_COLORS = ["var(--isle-mint)", "var(--isle-peach)", "var(--isle-lilac)", "var(--isle-sky)", "var(--art-butter)", "var(--art-blush)"];
 
 export function RegionPath({
   region,
@@ -553,7 +553,7 @@ export function RegionPath({
       <div className="trail" ref={trailRef}>
         <svg className="trail-art" aria-hidden="true">
           {segments.map((d) => (
-            <path key={d} d={d} fill="none" stroke="#F3C6D8" strokeWidth="8" strokeDasharray="3 12" strokeLinecap="round" />
+            <path key={d} d={d} fill="none" stroke="var(--art-trail-soft)" strokeWidth="8" strokeDasharray="3 12" strokeLinecap="round" />
           ))}
         </svg>
         {region.levels.map((level, index) => {
@@ -824,9 +824,9 @@ export function SpriteSheet() {
               character={{
                 gender: item.gender,
                 hair: item.hair,
-                hairColor: "#C5B3F5",
-                skin: "#F6C8A4",
-                outfit: item.gender === "girl" ? "#F8C8DC" : "#C5E4F7",
+                hairColor: HAIR_COLORS[4].hex,
+                skin: SKINS[1].hex,
+                outfit: item.gender === "girl" ? OUTFITS[5].hex : OUTFITS[3].hex,
               }}
               className="big"
               label={`${item.gender} ${item.label}`}
