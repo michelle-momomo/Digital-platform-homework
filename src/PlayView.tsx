@@ -7,6 +7,7 @@ import { rate, starLines, voiceRank } from "./logic";
 import { sfx } from "./sfx";
 import { useGame } from "./store";
 import { TimeBonus, TimerTip } from "./timebar";
+import { ToolIcon } from "./toolIcons";
 import type { LevelResult } from "./storage";
 
 function shuffle<T>(items: T[]) {
@@ -514,7 +515,7 @@ function AssignPlay({
               }}
             >
               <span className="bot" aria-hidden="true">
-                {agent.id === "you" ? "🙂" : agent.id === "buyer" || agent.id === "analyst" ? "📦" : "🤖"}
+                <ToolIcon id={agent.id} />
               </span>
               <b>{agent.label}</b>
               <div className="chip-slot">
